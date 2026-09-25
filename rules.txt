@@ -1,0 +1,45 @@
+/users/{userId}
+  - username: string
+  - coreCoins: number
+  - nexusShards: number
+  - createdAt: timestamp
+
+/pets/{petId}
+  - userId: string
+  - name: string
+  - stage: string ("egg" | "baby" | "teen" | "adult" | "legendary")
+  - stats: {
+      hunger: number (0-100)
+      energy: number (0-100)
+      happiness: number (0-100)
+      health: number (0-100)
+    }
+  - attributes: {
+      strength: number
+      agility: number
+      intelligence: number
+    }
+  - personality: string ("balanced" | "rebellious" | "lazy" | "genius")
+  - status: {
+      isSick: boolean
+      sicknessType: string | null
+      generation: number
+    }
+  - lastUpdated: timestamp
+
+/chats/{chatId}
+  - participants: array[string]
+  - lastMessage: string
+  - updatedAt: timestamp
+
+/chats/{chatId}/messages/{messageId}
+  - senderId: string
+  - text: string
+  - timestamp: timestamp
+
+/marketListings/{listingId}
+  - sellerId: string
+  - itemId: string
+  - price: number
+  - currency: "coreCoins" | "nexusShards"
+  - active: boolean

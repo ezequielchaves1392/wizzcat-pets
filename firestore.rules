@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      // Evitar modificación fraudulenta de monedas desde el cliente
+      allow update: if isOwner(userId) && request.resource.data.coreCoins == resource.data.coreCoins;
+    }
+
+    match /pets/{petId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Validar que los stats no superen los límites permitidos
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid
+        && request.resource.data.stats.hunger >= 0 
+        && request.resource.data.stats.hunger <= 100
+        && request.resource.data.stats.health >= 0 
+        && request.resource.data.stats.health <= 100;
+    }
+
+    match /chats/{chatId} {
+      allow read, write: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      
+      match /messages/{messageId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+    
+    match /marketListings/{listingId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && request.resource.data.sellerId == request.auth.uid;
+    }
+  }
+}

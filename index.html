@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber-Pet: Nexus - Autenticación Segura</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(6,182,212,0.2); }
+            50% { box-shadow: 0 0 40px rgba(6,182,212,0.6); }
+        }
+        .cyber-box { animation: pulse-glow 3s infinite; }
+    </style>
+</head>
+<body class="bg-slate-950 text-cyan-400 font-mono min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950">
+
+    <!-- ================= VISTA 1: AUTENTICACIÓN POR NOMBRE DE USUARIO ================= -->
+    <div id="view-auth" class="flex-1 flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-md bg-slate-900 border-2 border-cyan-500/50 p-8 rounded-2xl shadow-[0_0_30px_rgba(6,182,212,0.2)]">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold tracking-widest text-cyan-300">CYBER-PET // NEXUS</h1>
+                <p class="text-xs text-slate-400 mt-1">Identifícate con tu Operador único.</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-cyan-400 mb-1">NOMBRE DE OPERADOR (USUARIO)</label>
+                    <input type="text" id="auth-username" placeholder="Ej: CyberKnight99" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:border-cyan-400 focus:outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs text-cyan-400 mb-1">CONTRASEÑA (Mínimo 6 caracteres)</label>
+                    <input type="password" id="auth-pass" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:border-cyan-400 focus:outline-none text-sm">
+                </div>
+                
+                <!-- Caja de mensajes de error o estado -->
+                <div id="auth-message" class="text-xs text-rose-400 text-center bg-rose-950/40 border border-rose-900/50 p-2.5 rounded-lg hidden"></div>
+
+                <!-- Botones de Acción independientes -->
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button id="btn-login" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2.5 rounded-lg transition text-xs shadow-lg shadow-cyan-900/50">
+                        ⚡ INICIAR SESIÓN
+                    </button>
+                    <button id="btn-register" class="bg-slate-800 hover:bg-slate-700 border border-cyan-500/50 text-cyan-300 font-bold py-2.5 rounded-lg transition text-xs">
+                        🛡️ REGISTRARSE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= VISTA 2: JUEGO MULTIJUGADOR ================= -->
+    <div id="view-game" class="hidden flex-1 flex flex-col justify-between">
+        
+        <header class="w-full bg-slate-900/80 border-b border-cyan-500/30 p-4 flex justify-between items-center backdrop-blur-md">
+            <h1 class="text-xs font-bold tracking-widest text-cyan-300 flex items-center gap-2">
+                <span class="inline-block w-2 h-2 bg-cyan-400 rounded-full animate-ping"></span>
+                NEXUS // <span id="display-user" class="text-white">Operador</span>
+            </h1>
+            <div class="flex items-center gap-3 text-xs">
+                <span class="bg-slate-800 px-2.5 py-1 rounded border border-yellow-500/40 text-yellow-400">🪙 <strong id="val-coins">1250</strong></span>
+                <span class="bg-slate-800 px-2.5 py-1 rounded border border-purple-500/40 text-purple-400">💎 <strong id="val-shards">45</strong></span>
+                <button id="btn-logout" class="bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded border border-slate-700 text-slate-300 transition">Desconectar</button>
+            </div>
+        </header>
+
+        <main class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 max-w-7xl mx-auto w-full items-start">
+            
+            <div class="lg:col-span-2 flex flex-col items-center justify-center relative">
+                <div class="relative w-64 h-64 bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl border-2 border-cyan-500/50 flex flex-col items-center justify-center cyber-box">
+                    <div id="pet-avatar" class="text-6xl transition-transform duration-300 hover:scale-110 cursor-pointer">🤖</div>
+                    <p id="pet-name" class="mt-3 text-base font-bold text-white tracking-wider">Unit-X9 (Gen 1)</p>
+                    <span id="pet-personality" class="text-[10px] px-2 py-0.5 mt-1 rounded bg-cyan-950 text-cyan-300 border border-cyan-700">Personalidad: Equilibrada</span>
+                </div>
+
+                <div class="w-full max-w-md mt-4 grid grid-cols-2 gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800 backdrop-blur-sm">
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1"><span>Hambre</span><span id="text-hunger">85%</span></div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700"><div id="bar-hunger" class="bg-emerald-400 h-full w-[85%] transition-all"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1"><span>Energía</span><span id="text-energy">90%</span></div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700"><div id="bar-energy" class="bg-cyan-400 h-full w-[90%] transition-all"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1"><span>Felicidad</span><span id="text-happiness">70%</span></div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700"><div id="bar-happiness" class="bg-amber-400 h-full w-[70%] transition-all"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1"><span>Salud</span><span id="text-health">100%</span></div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700"><div id="bar-health" class="bg-rose-500 h-full w-[100%] transition-all"></div></div>
+                    </div>
+                </div>
+
+                <div id="game-terminal" class="w-full max-w-md mt-3 bg-slate-900/90 border border-cyan-500/30 rounded-lg p-2.5 text-xs text-cyan-300 flex items-center justify-between">
+                    <span id="terminal-text">>> Sincronizado con Firebase Cloud.</span>
+                    <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span>
+                </div>
+
+                <div class="flex gap-2 mt-4">
+                    <button id="btn-feed" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-xl transition text-xs shadow-lg">🍖 Alimentar</button>
+                    <button id="btn-train" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-xl transition text-xs shadow-lg">⚡ Entrenar</button>
+                </div>
+            </div>
+
+            <!-- Chat Global -->
+            <div class="bg-slate-900/80 border border-cyan-500/30 rounded-2xl p-4 flex flex-col h-[450px] backdrop-blur-md">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
+                    <h2 class="text-xs font-bold text-white tracking-widest">🌐 CHAT GLOBAL FIRESTORE</h2>
+                    <span class="text-[10px] bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-800">Live</span>
+                </div>
+                <div id="chat-messages" class="flex-1 overflow-y-auto space-y-2 pr-1 text-xs"></div>
+                <div class="mt-3 flex gap-2">
+                    <input type="text" id="chat-input" placeholder="Mensaje público..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:border-cyan-400 focus:outline-none">
+                    <button id="btn-send-chat" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-3 py-2 rounded-lg text-xs transition">Enviar</button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Script Principal con Manejo de Eventos por Listeners (Evita errores de scope de módulos) -->
+    <script type="module">
+        import { auth, db, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, doc, setDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp } from './firebase-config.js';
+
+        let currentUid = null;
+        let currentUsername = "";
+        let petData = { hunger: 85, energy: 90, happiness: 70, health: 100, coins: 1250, shards: 45 };
+
+        // Función auxiliar para transformar el nombre de usuario en un correo sintético de Firebase
+        function formatEmail(username) {
+            const cleanName = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+            return `${cleanName}@nexus-game.net`;
+        }
+
+        function showAuthError(message) {
+            const box = document.getElementById('auth-message');
+            box.innerText = message;
+            box.classList.remove('hidden');
+        }
+
+        // Evento de Registro
+        document.getElementById('btn-register').addEventListener('click', async () => {
+            const usernameInput = document.getElementById('auth-username').value.trim();
+            const pass = document.getElementById('auth-pass').value;
+
+            if (!usernameInput || usernameInput.length < 3) {
+                showAuthError("ERROR: El nombre de operador debe tener al menos 3 caracteres.");
+                return;
+            }
+            if (!pass || pass.length < 6) {
+                showAuthError("ERROR: La contraseña debe tener al menos 6 caracteres.");
+                return;
+            }
+
+            const syntheticEmail = formatEmail(usernameInput);
+
+            try {
+                const userCred = await createUserWithEmailAndPassword(auth, syntheticEmail, pass);
+                // Crear documento inicial de la mascota en Firestore
+                await setDoc(doc(db, "pets", userCred.user.uid), {
+                    name: usernameInput + "-Pet",
+                    generation: 1,
+                    stats: petData,
+                    updatedAt: serverTimestamp()
+                });
+            } catch (error) {
+                if (error.code === 'auth/email-already-in-use') {
+                    showAuthError("ERROR: Este nombre de operador ya está registrado. Usa otro.");
+                } else {
+                    showAuthError("ERROR: " + error.message);
+                }
+            }
+        });
+
+        // Evento de Iniciar Sesión
+        document.getElementById('btn-login').addEventListener('click', async () => {
+            const usernameInput = document.getElementById('auth-username').value.trim();
+            const pass = document.getElementById('auth-pass').value;
+
+            if (!usernameInput || !pass) {
+                showAuthError("ERROR: Completa todos los campos.");
+                return;
+            }
+
+            const syntheticEmail = formatEmail(usernameInput);
+
+            try {
+                await signInWithEmailAndPassword(auth, syntheticEmail, pass);
+            } catch (error) {
+                showAuthError("ERROR: Usuario o contraseña incorrectos.");
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            signOut(auth);
+        });
+
+        // Control de estado de autenticación de Firebase
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUid = user.uid;
+                currentUsername = user.email.split('@')[0];
+                document.getElementById('display-user').innerText = currentUsername;
+                document.getElementById('view-auth').classList.add('hidden');
+                document.getElementById('view-game').classList.remove('hidden');
+                
+                initGameSession(user.uid);
+                initGlobalChat();
+            } else {
+                currentUid = null;
+                document.getElementById('view-game').classList.add('hidden');
+                document.getElementById('view-auth').classList.remove('hidden');
+                document.getElementById('auth-username').value = '';
+                document.getElementById('auth-pass').value = '';
+                document.getElementById('auth-message').classList.add('hidden');
+            }
+        });
+
+        async function initGameSession(uid) {
+            const petRef = doc(db, "pets", uid);
+            onSnapshot(petRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    petData = data.stats;
+                    document.getElementById('pet-name').innerText = `${data.name} (Gen ${data.generation})`;
+                    updateHUD();
+                }
+            });
+        }
+
+        document.getElementById('btn-feed').addEventListener('click', async () => {
+            if (!currentUid) return;
+            petData.hunger = Math.min(100, petData.hunger + 15);
+            petData.happiness = Math.min(100, petData.happiness + 5);
+            await updateDoc(doc(db, "pets", currentUid), { stats: petData });
+        });
+
+        document.getElementById('btn-train').addEventListener('click', async () => {
+            if (!currentUid) return;
+            if (petData.energy < 25) {
+                document.getElementById('terminal-text').innerText = ">> Energía insuficiente para entrenar.";
+                return;
+            }
+            petData.energy -= 25;
+            petData.coins += 50;
+            await updateDoc(doc(db, "pets", currentUid), { stats: petData });
+        });
+
+        function updateHUD() {
+            document.getElementById('text-hunger').innerText = petData.hunger + '%';
+            document.getElementById('bar-hunger').style.width = petData.hunger + '%';
+            document.getElementById('text-energy').innerText = petData.energy + '%';
+            document.getElementById('bar-energy').style.width = petData.energy + '%';
+            document.getElementById('text-happiness').innerText = petData.happiness + '%';
+            document.getElementById('bar-happiness').style.width = petData.happiness + '%';
+            document.getElementById('text-health').innerText = petData.health + '%';
+            document.getElementById('bar-health').style.width = petData.health + '%';
+            document.getElementById('val-coins').innerText = petData.coins;
+            document.getElementById('val-shards').innerText = petData.shards;
+        }
+
+        function initGlobalChat() {
+            const q = query(collection(db, "globalChat"), orderBy("timestamp", "asc"));
+            onSnapshot(q, (snapshot) => {
+                const chatContainer = document.getElementById('chat-messages');
+                chatContainer.innerHTML = '';
+                snapshot.forEach((docSnap) => {
+                    const msg = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = "bg-slate-950/60 p-2 rounded border border-slate-800/80";
+                    div.innerHTML = `<strong class="text-cyan-400">${msg.user}:</strong> ${msg.text}`;
+                    chatContainer.appendChild(div);
+                });
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            });
+        }
+
+        document.getElementById('btn-send-chat').addEventListener('click', async () => {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text || !auth.currentUser) return;
+
+            await addDoc(collection(db, "globalChat"), {
+                user: currentUsername,
+                text: text,
+                timestamp: serverTimestamp()
+            });
+            input.value = '';
+        });
+    </script>
+</body>
+</html>
