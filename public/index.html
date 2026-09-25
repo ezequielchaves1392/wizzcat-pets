@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title id="browser-tab-title">Wizzcats Pets // Compañero Digital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            pet: { 950: '#0f172a', 900: '#1e293b', 800: '#334155', 500: '#3b82f6', 400: '#60a5fa' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap');
+    body {
+      font-family: 'Quicksand', sans-serif;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-user-drag: none;
+      touch-action: manipulation;
+    }
+    button, input, select {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    img {
+      -webkit-user-drag: none;
+    }
+    .soft-glow { box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15); }
+    .has-tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+  </style>
+</head>
+<body oncontextmenu="return false;" class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-blue-500 selection:text-white overflow-x-hidden">
+
+  <!-- ================= AUTENTICACIÓN Y CREACIÓN DE MASCOTA ================= -->
+  <div id="auth-screen" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl backdrop-blur-xl">
+      <div class="text-center mb-6">
+        <h2 class="text-xl font-bold tracking-wider text-blue-400">WIZZCATS PETS</h2>
+        <p class="text-xs text-slate-400 mt-1">Inicia sesión para cuidar a tu compañero</p>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Usuario</label>
+          <input id="auth-username" type="text" placeholder="ej. eze" autocomplete="off" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs text-blue-200 focus:outline-none focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Contraseña</label>
+          <input id="auth-password" type="password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs text-blue-200 focus:outline-none focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Nombre de la Mascota</label>
+          <input id="auth-petname" type="text" placeholder="ej. Kuru" autocomplete="off" class="w-full bg-slate-950 border border-blue-600 rounded-xl px-4 py-3 text-xs text-blue-300 focus:outline-none focus:border-blue-500 font-bold" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Sexo de la Mascota</label>
+          <div class="grid grid-cols-2 gap-3">
+            <button type="button" id="btn-gender-male" onclick="setAuthGender('Macho')" class="py-2.5 bg-blue-600 text-white font-bold rounded-xl text-xs cursor-pointer border border-blue-500 transition">♂ Macho</button>
+            <button type="button" id="btn-gender-female" onclick="setAuthGender('Hembra')" class="py-2.5 bg-slate-950 text-slate-400 font-bold rounded-xl text-xs cursor-pointer border border-slate-800 transition">♀ Hembra</button>
+          </div>
+        </div>
+        <div id="auth-error" class="text-xs text-rose-400 text-center hidden"></div>
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <button id="btn-login" class="py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition text-xs cursor-pointer shadow-lg shadow-blue-600/20">ENTRAR</button>
+          <button id="btn-register" class="py-3 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 transition text-xs cursor-pointer">REGISTRAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DASHBOARD PRINCIPAL ================= -->
+  <div id="game-dashboard" class="hidden flex-1 flex flex-col justify-between">
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-4 md:px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-3 z-40">
+      <div class="flex items-center gap-3">
+        <div class="w-3 h-3 rounded-full bg-blue-500 animate-pulse"></div>
+        <h1 class="text-sm md:text-base font-bold tracking-wide text-blue-400">WIZZCATS // <span id="header-pet-name" class="text-white">MASCOTA</span> <span id="header-pet-gender" class="text-blue-300">♂</span></h1>
+      </div>
+      <div class="flex flex-wrap items-center justify-center gap-2 text-xs font-medium">
+        <span id="clock-display" class="bg-slate-950 border border-slate-800 text-blue-300 px-3 py-1.5 rounded-xl">Día 1 - 08:00 (☀️)</span>
+        <span class="bg-amber-950/40 border border-amber-800/60 text-amber-300 px-3 py-1.5 rounded-xl">Monedas: <strong id="user-shards">150</strong> 🪙</span>
+        <span id="user-display" class="bg-slate-950 border border-slate-800 text-slate-300 px-3 py-1.5 rounded-xl">...</span>
+        <button id="btn-tamagotchi-reset" class="bg-rose-950/60 border border-rose-800/80 text-rose-300 px-3 py-1.5 rounded-xl hover:bg-rose-900 transition cursor-pointer font-bold">🔄 REINICIAR</button>
+        <button id="btn-logout" class="bg-slate-800 text-slate-300 px-3 py-1.5 rounded-xl hover:bg-slate-700 transition cursor-pointer">SALIR</button>
+      </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-3 md:p-6 grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+      
+      <!-- COLUMNA 1: ESTADÍSTICAS Y RASGOS -->
+      <div class="space-y-6">
+        <section class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 backdrop-blur-md space-y-4 shadow-xl">
+          <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+            <h2 class="text-xs uppercase font-bold tracking-widest text-blue-400">ESTADO VITAL</h2>
+            <span id="depression-status" class="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded-lg border border-emerald-800">Óptimo</span>
+          </div>
+          <div class="flex justify-between items-center bg-slate-950 p-3 rounded-2xl border border-slate-800">
+            <span class="text-xs text-slate-400">ETAPA / NIVEL</span>
+            <span id="pet-level" class="text-xs font-bold text-blue-300">NV. 1 (Huevo)</span>
+          </div>
+
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+            <div class="text-[11px] uppercase text-slate-400 font-bold border-b border-slate-800 pb-1">Rasgos de Personalidad:</div>
+            <div id="traits-container" class="flex flex-wrap gap-1.5 min-h-[35px] items-center">
+              <span class="text-[11px] text-slate-500 italic">Ningún rasgo desarrollado aún.</span>
+            </div>
+          </div>
+          
+          <div class="space-y-2.5 text-xs font-medium">
+            <div>
+              <div class="flex justify-between mb-1"><span class="text-slate-400">SALUD</span><span id="health-val" class="text-rose-400 font-bold">100%</span></div>
+              <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800"><div id="health-bar" class="bg-rose-500 h-full rounded-full w-full transition-all"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span class="text-slate-400">HAMBRE</span><span id="hunger-val" class="text-blue-200 font-bold">100%</span></div>
+              <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800"><div id="hunger-bar" class="bg-blue-500 h-full rounded-full w-full transition-all"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span class="text-slate-400">SED</span><span id="thirst-val" class="text-blue-200 font-bold">100%</span></div>
+              <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800"><div id="thirst-bar" class="bg-cyan-500 h-full rounded-full w-full transition-all"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span class="text-slate-400">ENERGÍA (SUEÑO)</span><span id="energy-val" class="text-blue-200 font-bold">100%</span></div>
+              <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800"><div id="energy-bar" class="bg-emerald-500 h-full rounded-full w-full transition-all"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span class="text-slate-400">VEJIGA</span><span id="bladder-val" class="text-indigo-200 font-bold">0%</span></div>
+              <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800"><div id="bladder-bar" class="bg-indigo-500 h-full rounded-full w-0 transition-all"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span class="text-slate-400">FELICIDAD</span><span id="fun-val" class="text-blue-200 font-bold">100%</span></div>
+              <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800"><div id="fun-bar" class="bg-amber-500 h-full rounded-full w-full transition-all"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span class="text-slate-400">HIGIENE</span><span id="hygiene-val" class="text-blue-200 font-bold">100%</span></div>
+              <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800"><div id="hygiene-bar" class="bg-purple-500 h-full rounded-full w-full transition-all"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MOCHILA APILABLE CON FAVORITOS -->
+        <section class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 backdrop-blur-md space-y-3 shadow-xl">
+          <h2 class="text-xs uppercase font-bold tracking-widest text-blue-400 border-b border-slate-800 pb-2">MOCHILA Y FAVORITOS</h2>
+          
+          <div class="grid grid-cols-3 gap-2 text-[10px] text-center font-bold">
+            <div class="bg-slate-950 p-2.5 rounded-2xl border border-slate-800"><div class="text-slate-400 mb-1">COMER</div><div id="slot-food" class="text-blue-300 truncate">Ninguno</div></div>
+            <div class="bg-slate-950 p-2.5 rounded-2xl border border-slate-800"><div class="text-slate-400 mb-1">BEBER</div><div id="slot-drink" class="text-cyan-300 truncate">Ninguno</div></div>
+            <div class="bg-slate-950 p-2.5 rounded-2xl border border-slate-800"><div class="text-slate-400 mb-1">HIGIENE</div><div id="slot-hygiene" class="text-purple-300 truncate">Ninguno</div></div>
+          </div>
+
+          <div id="inventory-container" class="space-y-2 text-xs font-mono max-h-[170px] overflow-y-auto pr-1">
+            <div class="text-slate-500 text-center py-2 font-sans">Mochila vacía.</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- COLUMNA 2 & 3: VISUALIZADOR, BURBUJA FLOTANTE Y ACCIONES -->
+      <section class="md:col-span-2 flex flex-col items-center justify-center space-y-5">
+        <div class="relative w-full max-w-[280px] h-64 bg-slate-900/60 border border-slate-800 rounded-3xl flex items-center justify-center soft-glow overflow-hidden group">
+          <!-- BURBUJA DE PETICIÓN FLOTANTE JUSTO ENCIMA DE LA MASCOTA -->
+          <div id="pet-demand-bubble" class="hidden absolute top-3 inset-x-2 mx-auto w-max max-w-[220px] bg-slate-900/95 border-2 border-amber-500 p-3 rounded-2xl text-center shadow-2xl z-30 space-y-2 animate-bounce backdrop-blur-md">
+            <div class="flex justify-between items-center text-[10px] text-amber-300 font-bold border-b border-amber-900/40 pb-1">
+              <span>⚡ PETICIÓN URGENTE</span>
+              <span id="demand-timer" class="bg-amber-950 px-1.5 py-0.5 rounded text-white">15s</span>
+            </div>
+            <div id="demand-text" class="text-[11px] text-white font-bold">"¡Tengo hambre!"</div>
+            <div class="flex justify-center gap-2 pt-1">
+              <button id="btn-fulfill" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 rounded text-[10px] font-bold cursor-pointer transition">CUMPLIR</button>
+              <button id="btn-scold" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px] font-bold cursor-pointer transition">REGAÑAR</button>
+            </div>
+          </div>
+
+          <div id="pet-avatar" class="text-8xl select-none animate-bounce">🥚</div>
+        </div>
+
+        <!-- CUADRO DE DIÁLOGO DE LA MASCOTA -->
+        <div class="w-full bg-slate-900/90 border border-blue-500/40 rounded-3xl p-4 space-y-2 shadow-xl backdrop-blur-md">
+          <div class="flex items-center justify-between text-[11px] text-blue-400 font-bold border-b border-slate-800 pb-1">
+            <span id="dialogue-speaker">💬 PENSAMIENTOS DE LA MASCOTA</span>
+            <span class="text-slate-500">EN DIRECTO</span>
+          </div>
+          <div id="dialogue-box-text" class="text-xs text-blue-100 font-medium italic min-h-[45px] flex items-center">
+            "Sincronizando el día..."
+          </div>
+        </div>
+
+        <!-- PANEL DE LOGS -->
+        <div class="w-full space-y-2">
+          <div id="game-log" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 text-xs text-blue-300 text-center min-h-[45px] flex items-center justify-center shadow-inner transition-all duration-300">
+            Sistema operativo en línea.
+          </div>
+          <div id="task-progress-box" class="hidden w-full bg-slate-950 border border-blue-800/80 rounded-2xl p-3 text-center space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span id="task-label" class="text-blue-300 font-bold">PROCESANDO...</span>
+              <button id="cancel-task-btn" class="px-2.5 py-0.5 bg-rose-950 border border-rose-800 text-rose-300 rounded-lg hover:bg-rose-900 cursor-pointer font-bold">CANCELAR</button>
+            </div>
+            <div class="w-full bg-slate-900 rounded-full h-2 border border-slate-800 overflow-hidden">
+              <div id="task-bar" class="bg-blue-500 h-full w-0 transition-all duration-150"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACCIONES RÁPIDAS -->
+        <div class="grid grid-cols-4 gap-2 w-full">
+          <button id="btn-eat-default" class="action-btn py-3 px-2 bg-blue-950/80 border border-blue-800 text-blue-300 hover:bg-blue-900 transition rounded-2xl text-xs font-bold cursor-pointer">🍽️ COMER</button>
+          <button id="btn-drink-default" class="action-btn py-3 px-2 bg-cyan-950/80 border border-cyan-800 text-cyan-300 hover:bg-cyan-900 transition rounded-2xl text-xs font-bold cursor-pointer">🧃 BEBER</button>
+          <button id="btn-hygiene-default" class="action-btn py-3 px-2 bg-purple-950/80 border border-purple-800 text-purple-300 hover:bg-purple-900 transition rounded-2xl text-xs font-bold cursor-pointer">🧼 HIGIENE</button>
+          <button id="btn-bathroom" class="action-btn py-3 px-2 bg-indigo-950/80 border border-indigo-800 text-indigo-300 hover:bg-indigo-900 transition rounded-2xl text-xs font-bold cursor-pointer">🚽 BAÑO</button>
+          <button id="btn-sleep" class="col-span-2 action-btn py-3 px-4 bg-emerald-950/80 border border-emerald-800 text-emerald-300 hover:bg-emerald-900 transition rounded-2xl text-xs font-bold cursor-pointer">💤 DORMIR</button>
+          <button id="btn-wake" class="hidden col-span-2 py-3 px-4 bg-amber-950/80 border border-amber-700 text-amber-300 hover:bg-amber-900 transition rounded-2xl text-xs font-bold cursor-pointer animate-pulse">⏰ LEVANTAR</button>
+        </div>
+
+        <!-- CENTRO DE ACTIVIDADES Y TRABAJOS -->
+        <div class="w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-4 space-y-3 shadow-xl">
+          <h2 class="text-xs uppercase font-bold tracking-widest text-blue-400 border-b border-slate-800 pb-2">ACTIVIDADES Y TRABAJOS</h2>
+          <div class="grid grid-cols-1 gap-2.5">
+            <button id="btn-open-play" class="action-btn py-3 px-4 bg-slate-950 border border-slate-800 text-amber-300 hover:bg-slate-800 transition rounded-2xl text-xs font-bold cursor-pointer flex items-center justify-between"><span>🎾 Juegos y Pasatiempos</span><span class="text-slate-500">▶</span></button>
+            <button id="btn-open-outdoor" class="action-btn py-3 px-4 bg-slate-950 border border-slate-800 text-teal-300 hover:bg-slate-800 transition rounded-2xl text-xs font-bold cursor-pointer flex items-center justify-between"><span>🌳 Deportes y Aire Libre</span><span class="text-slate-500">▶</span></button>
+            <button id="btn-open-minigames" class="action-btn py-3 px-4 bg-slate-950 border border-slate-800 text-emerald-300 hover:bg-slate-800 transition rounded-2xl text-xs font-bold cursor-pointer flex items-center justify-between"><span>🕹️ Zona de Trabajos y Empleos</span><span class="text-slate-500">▶</span></button>
+            <button id="btn-open-shop" class="action-btn py-3 px-4 bg-slate-950 border border-slate-800 text-indigo-300 hover:bg-slate-800 transition rounded-2xl text-xs font-bold cursor-pointer flex items-center justify-between"><span>🛍️ Tienda y Alimentos</span><span class="text-slate-500">▶</span></button>
+            <button id="btn-open-market" class="action-btn py-3 px-4 bg-slate-950 border border-slate-800 text-blue-300 hover:bg-slate-800 transition rounded-2xl text-xs font-bold cursor-pointer flex items-center justify-between"><span>🛒 Mercado Comunitario (P2P)</span><span class="text-slate-500">▶</span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMNA 4: RANKING -->
+      <section class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 backdrop-blur-md space-y-3 shadow-xl">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <h2 class="text-xs uppercase font-bold tracking-widest text-blue-400">RANKING GLOBAL</h2>
+        </div>
+        <div class="grid grid-cols-2 gap-1 text-[11px] text-center font-bold">
+          <button onclick="switchLeaderboard('days')" id="tab-days" class="bg-blue-600 text-white py-2 rounded-xl cursor-pointer transition">Tiempo Vivo</button>
+          <button onclick="switchLeaderboard('level')" id="tab-level" class="bg-slate-950 text-slate-400 py-2 rounded-xl cursor-pointer transition">Nivel</button>
+        </div>
+        <div id="leaderboard-container" class="space-y-2 font-mono text-xs max-h-[270px] overflow-y-auto">
+          <div class="text-center text-slate-500 py-4 font-sans">Cargando ranking...</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- CHAT FLOTANTE -->
+    <div class="fixed bottom-6 right-6 z-50">
+      <button id="toggle-chat-btn" class="p-4 bg-blue-600 text-white rounded-full shadow-2xl hover:bg-blue-500 transition flex items-center justify-center cursor-pointer relative">
+        💬 <span id="chat-badge" class="absolute -top-1 -right-1 bg-rose-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+      </button>
+    </div>
+
+    <div id="chat-drawer" class="fixed inset-y-0 right-0 w-full md:w-96 bg-slate-900 border-l border-slate-800 backdrop-blur-xl z-50 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col justify-between">
+      <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <h3 class="text-xs uppercase font-bold tracking-widest text-blue-300">CHAT COMUNITARIO</h3>
+        </div>
+        <button id="close-chat-btn" class="text-slate-400 hover:text-white text-sm font-bold cursor-pointer px-2 py-1">✕</button>
+      </div>
+      <div id="chat-messages-container" class="flex-1 p-4 overflow-y-auto space-y-3 text-xs">
+        <div class="text-center text-slate-500 py-4">Conectando chat...</div>
+      </div>
+      <div class="p-4 border-t border-slate-800 bg-slate-950 flex gap-2">
+        <input id="chat-input" type="text" placeholder="Escribe un mensaje..." maxlength="256" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 text-xs focus:outline-none focus:border-blue-500" />
+        <button id="send-chat-btn" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition cursor-pointer text-xs">ENVIAR</button>
+      </div>
+    </div>
+
+    <!-- MODAL DE MEMORIAL Y DESPEDIDA -->
+    <div id="memorial-modal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center z-50 p-4">
+      <div class="bg-slate-900 border border-rose-500/50 p-6 rounded-3xl max-w-md w-full space-y-4 text-xs shadow-2xl">
+        <div class="text-center space-y-1 border-b border-slate-800 pb-3">
+          <h3 class="text-sm font-bold text-rose-400 uppercase tracking-wider">📜 MEMORIAL DE LA MASCOTA</h3>
+          <p id="memorial-title-name" class="text-white font-bold text-sm pt-1">Adiós, compañero</p>
+        </div>
+        <div id="memorial-summary" class="space-y-2 text-slate-300 bg-slate-950 p-4 rounded-2xl border border-slate-800 text-[11px] leading-relaxed">
+          <!-- Generado dinámicamente -->
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Nombre de la Nueva Mascota</label>
+          <input id="memorial-petname" type="text" placeholder="ej. Kuru V2" autocomplete="off" class="w-full bg-slate-950 border border-rose-700/60 rounded-xl px-4 py-3 text-xs text-rose-200 focus:outline-none focus:border-rose-500 font-bold" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Sexo del Nuevo Compañero</label>
+          <div class="grid grid-cols-2 gap-3">
+            <button type="button" id="btn-new-gender-male" onclick="setNewMemorialGender('Macho')" class="py-2.5 bg-blue-600 text-white font-bold rounded-xl text-xs cursor-pointer border border-blue-500 transition">♂ Macho</button>
+            <button type="button" id="btn-new-gender-female" onclick="setNewMemorialGender('Hembra')" class="py-2.5 bg-slate-950 text-slate-400 font-bold rounded-xl text-xs cursor-pointer border border-slate-800 transition">♀ Hembra</button>
+          </div>
+        </div>
+        <div class="text-center pt-2">
+          <button id="btn-confirm-memorial" class="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl transition cursor-pointer text-xs shadow-lg shadow-rose-600/20">ADOPTAR NUEVO COMPAÑERO</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE REPORTE OFFLINE -->
+    <div id="offline-report-modal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+      <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-lg w-full space-y-4 text-xs shadow-2xl">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider">⚠️ REPORTE DE AUSENCIA</h3>
+        </div>
+        <div id="offline-report-content" class="space-y-2 text-slate-300 max-h-[250px] overflow-y-auto bg-slate-950 p-3.5 rounded-2xl border border-slate-800"></div>
+        <div class="text-center pt-2">
+          <button id="close-offline-report" class="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition cursor-pointer text-xs">ENTENDIDO</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL JUEGOS (Pantalla completa en celular) -->
+    <div id="play-modal" class="hidden fixed inset-0 md:inset-auto md:max-w-lg w-full h-full md:h-auto md:rounded-3xl bg-slate-900 border border-slate-800 p-5 flex flex-col z-50 shadow-2xl m-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-3 shrink-0">
+        <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider">JUEGOS Y PASATIEMPOS</h3>
+        <button id="close-play-btn" class="text-slate-400 hover:text-white text-sm font-bold cursor-pointer p-2">✕</button>
+      </div>
+      <div id="play-options-container" class="grid grid-cols-1 gap-3 text-xs overflow-y-auto pr-1 flex-1"></div>
+    </div>
+
+    <!-- MODAL DEPORTES (Pantalla completa en celular) -->
+    <div id="outdoor-modal" class="hidden fixed inset-0 md:inset-auto md:max-w-lg w-full h-full md:h-auto md:rounded-3xl bg-slate-900 border border-slate-800 p-5 flex flex-col z-50 shadow-2xl m-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-3 shrink-0">
+        <h3 class="text-sm font-bold text-teal-400 uppercase tracking-wider">DEPORTES Y AIRE LIBRE</h3>
+        <button id="close-outdoor-btn" class="text-slate-400 hover:text-white text-sm font-bold cursor-pointer p-2">✕</button>
+      </div>
+      <div id="outdoor-options-container" class="grid grid-cols-1 gap-3 text-xs overflow-y-auto pr-1 flex-1"></div>
+    </div>
+
+    <!-- MODAL TRABAJOS (Pantalla completa en celular) -->
+    <div id="minigames-modal" class="hidden fixed inset-0 md:inset-auto md:max-w-lg w-full h-full md:h-auto md:rounded-3xl bg-slate-900 border border-slate-800 p-5 flex flex-col z-50 shadow-2xl m-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-3 shrink-0">
+        <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wider">ZONA DE TRABAJOS</h3>
+        <button id="close-minigames-btn" class="text-slate-400 hover:text-white text-sm font-bold cursor-pointer p-2">✕</button>
+      </div>
+      <div id="work-options-container" class="grid grid-cols-1 gap-3 text-xs overflow-y-auto pr-1 flex-1"></div>
+    </div>
+
+    <!-- TIENDA (Pantalla completa en celular) -->
+    <div id="shop-modal" class="hidden fixed inset-0 md:inset-auto md:max-w-lg w-full h-full md:h-auto md:rounded-3xl bg-slate-900 border border-slate-800 p-5 flex flex-col z-50 shadow-2xl m-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-3 shrink-0">
+        <h3 class="text-sm font-bold text-indigo-300 uppercase tracking-wider">TIENDA Y ALIMENTOS</h3>
+        <button id="close-shop-btn" class="text-slate-400 hover:text-white text-sm font-bold cursor-pointer p-2">✕</button>
+      </div>
+      
+      <div class="grid grid-cols-4 gap-1 text-[10px] font-bold mb-3 text-center shrink-0">
+        <button onclick="switchShopTab('food')" id="shop-tab-food" class="bg-indigo-600 text-white py-2 rounded-xl cursor-pointer transition">🍔 Comida</button>
+        <button onclick="switchShopTab('drink')" id="shop-tab-drink" class="bg-slate-950 text-slate-400 py-2 rounded-xl cursor-pointer transition">🥤 Bebida</button>
+        <button onclick="switchShopTab('hygiene')" id="shop-tab-hygiene" class="bg-slate-950 text-slate-400 py-2 rounded-xl cursor-pointer transition">🧼 Higiene</button>
+        <button onclick="switchShopTab('pharma')" id="shop-tab-pharma" class="bg-slate-950 text-slate-400 py-2 rounded-xl cursor-pointer transition">💊 Especiales</button>
+      </div>
+
+      <div class="space-y-3 text-xs overflow-y-auto pr-1 flex-1">
+        <div id="shop-section-food" class="space-y-2">
+          <div class="flex justify-between items-center bg-slate-950 p-3 rounded-2xl border border-slate-800">
+            <div><div class="font-bold text-blue-200">Manzana fresca</div><div class="text-[11px] text-slate-400">Restaura +25 Hambre</div></div>
+            <button onclick="buyShopItem({name: 'Manzana fresca', type: 'food', value: 25, duration: 2}, 12)" class="px-3 py-2 bg-indigo-600 text-white font-bold rounded-xl text-xs cursor-pointer">12 🪙</button>
+          </div>
+          <div class="flex justify-between items-center bg-slate-950 p-3 rounded-2xl border border-slate-800">
+            <div><div class="font-bold text-amber-200">Chocolate artesanal</div><div class="text-[11px] text-slate-400">Restaura +35 Hambre y +20 Felicidad</div></div>
+            <button onclick="buyShopItem({name: 'Chocolate artesanal', type: 'food', value: 35, duration: 2, isChocolate: true}, 20)" class="px-3 py-2 bg-indigo-600 text-white font-bold rounded-xl text-xs cursor-pointer">20 🪙</button>
+          </div>
+        </div>
+        <div id="shop-section-drink" class="space-y-2 hidden">
+          <div class="flex justify-between items-center bg-slate-950 p-3 rounded-2xl border border-slate-800">
+            <div><div class="font-bold text-cyan-200">Agua mineral</div><div class="text-[11px] text-slate-400">Restaura +30 Sed</div></div>
+            <button onclick="buyShopItem({name: 'Agua mineral', type: 'drink', value: 30, duration: 2}, 10)" class="px-3 py-2 bg-indigo-600 text-white font-bold rounded-xl text-xs cursor-pointer">10 🪙</button>
+          </div>
+          <div class="flex justify-between items-center bg-slate-950 p-3 rounded-2xl border border-slate-800">
+            <div><div class="font-bold text-amber-200">Bebida Energética</div><div class="text-[11px] text-slate-400">Restaura +45 Sed y +15 Energía</div></div>
+            <button onclick="buyShopItem({name: 'Bebida Energética', type: 'drink', value: 45, duration: 2, isEnergyDrink: true}, 18)" class="px-3 py-2 bg-indigo-600 text-white font-bold rounded-xl text-xs cursor-pointer">18 🪙</button>
+          </div>
+        </div>
+        <div id="shop-section-hygiene" class="space-y-2 hidden">
+          <div class="flex justify-between items-center bg-slate-950 p-3 rounded-2xl border border-slate-800">
+            <div><div class="font-bold text-purple-200">Jabón perfumado</div><div class="text-[11px] text-slate-400">Restaura +45 Higiene</div></div>
+            <button onclick="buyShopItem({name: 'Jabón perfumado', type: 'hygiene', value: 45, duration: 2}, 15)" class="px-3 py-2 bg-indigo-600 text-white font-bold rounded-xl text-xs cursor-pointer">15 🪙</button>
+          </div>
+        </div>
+        <div id="shop-section-pharma" class="space-y-2 hidden">
+          <div class="flex justify-between items-center bg-slate-950 p-3 rounded-2xl border border-slate-800">
+            <div><div class="font-bold text-slate-200">Té relajante natural</div><div class="text-[11px] text-slate-400">Ayuda a calmar los nervios y la ansiedad</div></div>
+            <button onclick="buyPharmaItem('Té relajante natural', 'Ansioso', 30)" class="px-3 py-2 bg-indigo-600 text-white font-bold rounded-xl text-xs cursor-pointer">30 🪙</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MERCADO (Pantalla completa en celular) -->
+    <div id="market-modal" class="hidden fixed inset-0 md:inset-auto md:max-w-lg w-full h-full md:h-auto md:rounded-3xl bg-slate-900 border border-slate-800 p-5 flex flex-col z-50 shadow-2xl m-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4 shrink-0">
+        <h3 class="text-sm font-bold text-blue-300 uppercase tracking-wider">MERCADO COMUNITARIO</h3>
+        <button id="close-market-btn" class="text-slate-400 hover:text-white text-sm font-bold cursor-pointer p-2">✕</button>
+      </div>
+      <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 mb-4 flex gap-2 items-center shrink-0">
+        <input id="market-item-name" type="text" placeholder="Nombre del ítem" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-blue-200 focus:outline-none" />
+        <input id="market-item-price" type="number" placeholder="Precio" class="w-24 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-amber-400 focus:outline-none" />
+        <button id="btn-create-listing" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition text-xs cursor-pointer">PUBLICAR</button>
+      </div>
+      <div class="flex-1 overflow-y-auto space-y-2 pr-1 text-xs" id="market-listings-container">
+        <div class="text-center text-slate-500 py-6">Cargando mercado...</div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center py-3 text-[11px] text-slate-500 border-t border-slate-800/80">
+    WIZZCATS PETS © 2026 — CUIDADO Y CONVIVENCIA
+  </footer>
+
+  <!-- ================= SCRIPT DEFINITIVO ================= -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, deleteDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBR0R04751C2ytAjkIYTcFJ2NMDOUS0wCw",
+      authDomain: "pet-project-aef10.firebaseapp.com",
+      databaseURL: "https://pet-project-aef10-default-rtdb.firebaseio.com",
+      projectId: "pet-project-aef10",
+      storageBucket: "pet-project-aef10.firebasestorage.app",
+      messagingSenderId: "1095832691858",
+      appId: "1:1095832691858:web:62991ce2f3df13eb1bb24b",
+      measurementId: "G-594M26YM0P"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const defaultBrowserTitle = "Wizzcats Pets // Compañero Digital";
+    let currentUser = null;
+    let currentUsername = "";
+    let activeTaskTimer = null;
+    let activeDemand = null;
+    let demandCountdownTimer = null;
+    let demandTimeLeft = 15;
+    let isSleeping = false;
+    let selectedGender = "Macho";
+    let newMemorialGender = "Macho";
+
+    window.setAuthGender = function(g) {
+      selectedGender = g;
+      const mBtn = document.getElementById("btn-gender-male");
+      const fBtn = document.getElementById("btn-gender-female");
+      if (g === "Macho") {
+        mBtn.className = "py-2.5 bg-blue-600 text-white font-bold rounded-xl text-xs cursor-pointer border border-blue-500 transition";
+        fBtn.className = "py-2.5 bg-slate-950 text-slate-400 font-bold rounded-xl text-xs cursor-pointer border border-slate-800 transition";
+      } else {
+        fBtn.className = "py-2.5 bg-rose-600 text-white font-bold rounded-xl text-xs cursor-pointer border border-rose-500 transition";
+        mBtn.className = "py-2.5 bg-slate-950 text-slate-400 font-bold rounded-xl text-xs cursor-pointer border border-slate-800 transition";
+      }
+    };
+
+    window.setNewMemorialGender = function(g) {
+      newMemorialGender = g;
+      const mBtn = document.getElementById("btn-new-gender-male");
+      const fBtn = document.getElementById("btn-new-gender-female");
+      if (g === "Macho") {
+        mBtn.className = "py-2.5 bg-blue-600 text-white font-bold rounded-xl text-xs cursor-pointer border border-blue-500 transition";
+        fBtn.className = "py-2.5 bg-slate-950 text-slate-400 font-bold rounded-xl text-xs cursor-pointer border border-slate-800 transition";
+      } else {
+        fBtn.className = "py-2.5 bg-rose-600 text-white font-bold rounded-xl text-xs cursor-pointer border border-rose-500 transition";
+        mBtn.className = "py-2.5 bg-slate-950 text-slate-400 font-bold rounded-xl text-xs cursor-pointer border border-slate-800 transition";
+      }
+    };
+
+    function getRandomInitialTraits() {
+      const pool = ["Miedoso", "Ansioso", "Insomne", "Dormilón", "Hiperactivo"];
+      const count = Math.random() < 0.5 ? 1 : 2;
+      const shuffled = [...pool].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, count);
+    }
+
+    let petState = { 
+      petName: "Kuru",
+      gender: "Macho",
+      health: 100, hunger: 100, thirst: 100, energy: 100, fun: 100, hygiene: 100, bladder: 0,
+      traits: [], isDead: false,
+      defaultFoodIndex: null, defaultDrinkIndex: null, defaultHygieneIndex: null,
+      level: 1, exp: 0, shards: 150, 
+      inventory: [
+        { name: "Manzana fresca", type: "food", value: 25, duration: 2, count: 2 },
+        { name: "Agua mineral", type: "drink", value: 30, duration: 2, count: 1 },
+        { name: "Jabón perfumado", type: "hygiene", value: 45, duration: 2, count: 1 }
+      ],
+      lastActionLog: "Sistema inicializado.",
+      createdAt: Date.now(), daysAlive: 1, lastUpdateTimestamp: Date.now(),
+      fulfilledCount: 0, totalRequests: 0, sleepTimeCount: 0, energyDrinkCount: 0, chocolateCount: 0, sportsCount: 0
+    };
+
+    let unsubLeaderboard = null, unsubChat = null, unsubMarket = null;
+    let lifecycleInterval = null, clockInterval = null, demandInterval = null, thoughtsInterval = null;
+    let currentLeaderboardMetric = 'days';
+
+    const authScreen = document.getElementById("auth-screen");
+    const gameDashboard = document.getElementById("game-dashboard");
+    const usernameInput = document.getElementById("auth-username");
+    const passwordInput = document.getElementById("auth-password");
+    const petnameInput = document.getElementById("auth-petname");
+    const authError = document.getElementById("auth-error");
+
+    const traitDescriptions = {
+      "Miedoso": "Se asusta con facilidad ante los tratos bruscos. Quizás pasar más tiempo jugando alegremente le devuelva la confianza.",
+      "Ansioso": "Acumula tensión por falta de atención o demandas ignoradas. Un buen momento de relajación o un té natural podría tranquilizarlo.",
+      "Insomne": "Le cuesta descansar por las noches. Mantener una rutina equilibrada ayuda a regular su sueño.",
+      "Malcriado": "Se vuelve exigente y caprichoso si se le conceden absolutamente todos los caprichos sin ponerle límites ni disciplina.",
+      "Dormilón": "Tiende a pasar demasiado tiempo en reposo. Estimularlo con paseos y evitar el exceso de sueño le devolverá la vitalidad.",
+      "Adicto al azúcar": "Dependencia elevada por chocolates y dulces. Una temporada de alimentos frescos y equilibrados restablecerá su metabolismo.",
+      "Adicto a las bebidas energéticas": "Consumo excesivo de estimulantes líquidos. Volver al agua pura y descansar con calma le sentará bien.",
+      "Hiperactivo": "Acumula demasiada energía física sin quemar. Practicar deportes y actividades al aire libre canalizará su entusiasmo."
+    };
+
+    const playActivities = [
+      { name: 'Lanzar la pelota', duration: 3, fun: 30, levelReq: 1, emoji: '🎾', desc: 'Disfrutar un rato juntos y subir la alegría.' },
+      { name: 'Frisbee en el parque', duration: 4, fun: 40, levelReq: 2, emoji: '🥏', desc: 'Un juego dinámico al aire libre.' },
+      { name: 'Burbujas de jabón', duration: 3, fun: 25, levelReq: 3, emoji: '🫧', desc: 'Relajante y divertido pasatiempo visual.' },
+      { name: 'Escondite virtual', duration: 4, fun: 45, levelReq: 4, emoji: '🙈', desc: 'Estimula la agilidad mental y la complicidad.' },
+      { name: 'Circuito de agilidad', duration: 5, fun: 55, levelReq: 5, emoji: '🛹', desc: 'Prueba de reflejos divertidos.' },
+      { name: 'Espejito mágico', duration: 3, fun: 35, levelReq: 6, emoji: '🪞', desc: 'Entretenimiento curioso y sonrisas aseguradas.' }
+    ];
+
+    const outdoorActivities = [
+      { name: 'Salir a correr', duration: 4, fun: 35, levelReq: 1, emoji: '🏃', desc: 'Hacer ejercicio físico y mantenerse en forma.' },
+      { name: 'Excursión al monte', duration: 6, fun: 50, levelReq: 2, emoji: '⛺', desc: 'Caminata larga respirando aire puro.' },
+      { name: 'Paseo en bicicleta', duration: 5, fun: 45, levelReq: 3, emoji: '🚲', desc: 'Recorrido veloz por los senderos verdes.' },
+      { name: 'Natación en el río', duration: 5, fun: 55, levelReq: 4, emoji: '🏊', desc: 'Refrescante y excelente ejercicio muscular.' },
+      { name: 'Yoga al aire libre', duration: 4, fun: 40, levelReq: 5, emoji: '🧘', desc: 'Paz mental y estiramiento corporal.' },
+      { name: 'Acampar bajo las estrellas', duration: 7, fun: 70, levelReq: 6, emoji: '✨', desc: 'Una noche inolvidable en contacto con la naturaleza.' }
+    ];
+
+    const workActivities = [
+      { name: 'Repartir paquetes', duration: 4, reward: 45, energyCost: 30, levelReq: 1, emoji: '📦', desc: 'Ganancia rápida y sencilla.' },
+      { name: 'Organizar archivos', duration: 5, reward: 75, energyCost: 40, levelReq: 2, emoji: '💻', desc: 'Trabajo de oficina ordenado.' },
+      { name: 'Asistente de cocina', duration: 6, reward: 100, energyCost: 45, levelReq: 3, emoji: '🍳', desc: 'Preparar platos para la comunidad.' },
+      { name: 'Diseñador gráfico junior', duration: 7, reward: 140, energyCost: 50, levelReq: 4, emoji: '🎨', desc: 'Creación de carteles artísticos.' },
+      { name: 'Guía turístico virtual', duration: 8, reward: 190, energyCost: 55, levelReq: 5, emoji: '🗺️', desc: 'Mostrar lugares hermosos a los visitantes.' },
+      { name: 'Programador senior', duration: 10, reward: 250, energyCost: 65, levelReq: 6, emoji: '⚡', desc: 'Desarrollo de software avanzado.' }
+    ];
+
+    function renderModalsContent() {
+      const playContainer = document.getElementById("play-options-container");
+      playContainer.innerHTML = "";
+      playActivities.forEach(act => {
+        const locked = petState.level < act.levelReq;
+        const div = document.createElement("div");
+        if (locked) {
+          div.className = "p-3.5 bg-slate-950/50 border border-slate-800/50 rounded-2xl text-slate-500 cursor-not-allowed flex justify-between items-center opacity-60";
+          div.innerHTML = `<div><div class="font-bold text-slate-400">${act.emoji} ${act.name}</div><div class="text-[11px] text-slate-600 mt-0.5">Requiere Nivel ${act.levelReq} para desbloquear</div></div><span class="text-[10px] bg-slate-900 px-2 py-1 rounded text-slate-400 font-bold">Bloqueado 🔒</span>`;
+        } else {
+          div.className = "p-3.5 bg-slate-950 border border-slate-800 rounded-2xl hover:bg-slate-800 transition text-left cursor-pointer flex justify-between items-center";
+          div.innerHTML = `<div><div class="font-bold text-amber-300">${act.emoji} ${act.name}</div><div class="text-[11px] text-slate-400 mt-0.5">${act.desc} (Nivel ${act.levelReq})</div></div><span class="text-xs text-amber-400 font-bold">Jugar ▶</span>`;
+          div.onclick = () => startPlayActivity(act.name, act.duration, act.fun, act.emoji);
+        }
+        playContainer.appendChild(div);
+      });
+
+      const outdoorContainer = document.getElementById("outdoor-options-container");
+      outdoorContainer.innerHTML = "";
+      outdoorActivities.forEach(act => {
+        const locked = petState.level < act.levelReq;
+        const div = document.createElement("div");
+        if (locked) {
+          div.className = "p-3.5 bg-slate-950/50 border border-slate-800/50 rounded-2xl text-slate-500 cursor-not-allowed flex justify-between items-center opacity-60";
+          div.innerHTML = `<div><div class="font-bold text-slate-400">${act.emoji} ${act.name}</div><div class="text-[11px] text-slate-600 mt-0.5">Requiere Nivel ${act.levelReq} para desbloquear</div></div><span class="text-[10px] bg-slate-900 px-2 py-1 rounded text-slate-400 font-bold">Bloqueado 🔒</span>`;
+        } else {
+          div.className = "p-3.5 bg-slate-950 border border-slate-800 rounded-2xl hover:bg-slate-800 transition text-left cursor-pointer flex justify-between items-center";
+          div.innerHTML = `<div><div class="font-bold text-teal-300">${act.emoji} ${act.name}</div><div class="text-[11px] text-slate-400 mt-0.5">${act.desc} (Nivel ${act.levelReq})</div></div><span class="text-xs text-teal-400 font-bold">Ir ▶</span>`;
+          div.onclick = () => startOutdoorActivity(act.name, act.duration, act.fun, act.emoji);
+        }
+        outdoorContainer.appendChild(div);
+      });
+
+      const workContainer = document.getElementById("work-options-container");
+      workContainer.innerHTML = "";
+      workActivities.forEach(act => {
+        const locked = petState.level < act.levelReq;
+        const div = document.createElement("div");
+        if (locked) {
+          div.className = "p-3.5 bg-slate-950/50 border border-slate-800/50 rounded-2xl text-slate-500 cursor-not-allowed flex justify-between items-center opacity-60";
+          div.innerHTML = `<div><div class="font-bold text-slate-400">${act.emoji} ${act.name}</div><div class="text-[11px] text-slate-600 mt-0.5">Requiere Nivel ${act.levelReq} para desbloquear</div></div><span class="text-[10px] bg-slate-900 px-2 py-1 rounded text-slate-400 font-bold">Bloqueado 🔒</span>`;
+        } else {
+          div.className = "p-3.5 bg-slate-950 border border-slate-800 rounded-2xl hover:bg-slate-800 transition text-left cursor-pointer flex justify-between items-center";
+          div.innerHTML = `<div><div class="font-bold text-amber-300">${act.emoji} ${act.name} (+${act.reward} 🪙)</div><div class="text-[11px] text-slate-400 mt-0.5">${act.desc} (Nivel ${act.levelReq})</div></div><span class="text-xs text-amber-400 font-bold">Trabajar ▶</span>`;
+          div.onclick = () => startWorkActivity(act.name, act.duration, act.reward, act.energyCost, act.emoji);
+        }
+        workContainer.appendChild(div);
+      });
+    }
+
+    function getInternalEmail(username) {
+      return `${username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '')}@wizzcats.internal`;
+    }
+
+    function setGameLog(message) {
+      petState.lastActionLog = message;
+      const logEl = document.getElementById("game-log");
+      logEl.style.opacity = 0;
+      setTimeout(() => {
+        logEl.textContent = message;
+        logEl.style.opacity = 1;
+      }, 150);
+    }
+
+    function setDialogue(text) {
+      document.getElementById("dialogue-speaker").textContent = `💬 ${petState.petName.toUpperCase()} // PENSAMIENTOS`;
+      const dialogueEl = document.getElementById("dialogue-box-text");
+      dialogueEl.style.opacity = 0;
+      setTimeout(() => {
+        dialogueEl.textContent = `"${text}"`;
+        dialogueEl.style.opacity = 1;
+      }, 150);
+    }
+
+    function checkSleepBlock() {
+      if (isSleeping) {
+        setDialogue("Zzz... No puedo hacer esto mientras estoy durmiendo, déjame descansar.");
+        setGameLog("> ⚠️ Acción bloqueada: La mascota está durmiendo.");
+        return true;
+      }
+      return false;
+    }
+
+    function setPetAvatarEmoji(emoji) {
+      document.getElementById("pet-avatar").textContent = emoji;
+    }
+
+    function updateBaseAvatar() {
+      if (isSleeping) {
+        setPetAvatarEmoji("💤");
+        return;
+      }
+      let emoji = "🥚";
+      if (petState.level >= 5) emoji = petState.gender === "Hembra" ? "🐉" : "🦖";
+      else if (petState.level >= 3) emoji = petState.gender === "Hembra" ? "🐱" : "🐶";
+      else if (petState.level >= 2) emoji = petState.gender === "Hembra" ? "🐰" : "🐹";
+      else emoji = "🥚";
+      setPetAvatarEmoji(emoji);
+    }
+
+    function showError(msg) {
+      authError.textContent = msg;
+      authError.classList.remove("hidden");
+    }
+
+    function startGlobalClock() {
+      if (clockInterval) clearInterval(clockInterval);
+      clockInterval = setInterval(() => {
+        const totalMinutes = Math.floor(Date.now() / 1000);
+        const day = Math.floor(totalMinutes / 1440) + 1;
+        const hour = Math.floor((totalMinutes % 1440) / 60);
+        const minute = totalMinutes % 60;
+        
+        const isNight = hour < 6 || hour >= 22;
+        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        document.getElementById("clock-display").textContent = `Día ${day} - ${timeStr} (${isNight ? '🌙' : '☀️'})`;
+      }, 1000);
+    }
+
+    function stopActiveTask() {
+      if (activeTaskTimer) {
+        clearInterval(activeTaskTimer);
+        activeTaskTimer = null;
+        document.getElementById("task-progress-box").classList.add("hidden");
+        document.getElementById("task-bar").style.width = `0%`;
+        toggleActionButtons(false);
+        updateBaseAvatar();
+      }
+    }
+
+    function performProgressiveTask(taskName, durationSeconds, taskEmoji, onStep, onComplete, cancelCallback) {
+      if (activeTaskTimer) {
+        setGameLog(`> ⚠️ Ya hay una tarea en curso.`);
+        return;
+      }
+      
+      toggleActionButtons(true);
+      if (taskEmoji) setPetAvatarEmoji(taskEmoji);
+
+      const progressBox = document.getElementById("task-progress-box");
+      const taskBar = document.getElementById("task-bar");
+      const taskLabel = document.getElementById("task-label");
+      
+      progressBox.classList.remove("hidden");
+      taskLabel.textContent = taskName.toUpperCase();
+      
+      let elapsed = 0;
+      const interval = 100;
+      const totalSteps = (durationSeconds * 1000) / interval;
+      
+      document.getElementById("cancel-task-btn").onclick = () => {
+        stopActiveTask();
+        if (cancelCallback) cancelCallback(elapsed / totalSteps);
+        setGameLog(`> ⚠️ Acción cancelada.`);
+        updateUI();
+        syncToCloud();
+      };
+
+      activeTaskTimer = setInterval(() => {
+        elapsed++;
+        const percent = (elapsed / totalSteps) * 100;
+        taskBar.style.width = `${percent}%`;
+
+        if (onStep) onStep(1 / totalSteps);
+
+        if (elapsed >= totalSteps) {
+          stopActiveTask();
+          if (onComplete) onComplete();
+          updateUI();
+          syncToCloud();
+        }
+      }, interval);
+    }
+
+    function toggleActionButtons(disabled) {
+      document.querySelectorAll(".action-btn").forEach(btn => btn.disabled = disabled);
+    }
+
+    document.getElementById("btn-login").addEventListener("click", async () => {
+      authError.classList.add("hidden");
+      try {
+        await signInWithEmailAndPassword(auth, getInternalEmail(usernameInput.value), passwordInput.value);
+      } catch (e) {
+        showError("Usuario o contraseña incorrectos.");
+      }
+    });
+
+    document.getElementById("btn-register").addEventListener("click", async () => {
+      authError.classList.add("hidden");
+      const petNameVal = petnameInput.value.trim();
+      if (!petNameVal) {
+        showError("Debes asignarle un nombre a tu mascota.");
+        return;
+      }
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, getInternalEmail(usernameInput.value), passwordInput.value);
+        const randomTraits = getRandomInitialTraits();
+        await setDoc(doc(db, "pets", cred.user.uid), {
+          user: usernameInput.value.trim(),
+          petName: petNameVal,
+          gender: selectedGender,
+          health: 100, hunger: 100, thirst: 100, energy: 100, fun: 100, hygiene: 100, bladder: 0,
+          traits: randomTraits, isDead: false, level: 1, exp: 0, shards: 150,
+          inventory: [{ name: "Manzana fresca", type: "food", value: 25, duration: 2, count: 2 }],
+          createdAt: Date.now(), daysAlive: 1, lastUpdateTimestamp: Date.now(),
+          fulfilledCount: 0, totalRequests: 0, sleepTimeCount: 0, energyDrinkCount: 0, chocolateCount: 0, sportsCount: 0
+        });
+      } catch (e) {
+        showError("No se pudo registrar el usuario.");
+      }
+    });
+
+    document.getElementById("btn-logout").addEventListener("click", () => signOut(auth));
+
+    document.getElementById("btn-tamagotchi-reset").onclick = () => {
+      handlePetDeath();
+    };
+
+    function openMemorialModal() {
+      const modal = document.getElementById("memorial-modal");
+      const titleName = document.getElementById("memorial-title-name");
+      const summary = document.getElementById("memorial-summary");
+      const input = document.getElementById("memorial-petname");
+
+      titleName.textContent = `Descansa en paz, ${petState.petName} (${petState.gender === 'Hembra' ? '♀' : '♂'})`;
+      
+      let farewellText = `• Días vividos: <strong>${petState.daysAlive}</strong><br>`;
+      farewellText += `• Nivel alcanzado: <strong>Nv. ${petState.level}</strong><br>`;
+      farewellText += `• Rasgos desarrollados: <strong>${petState.traits.length > 0 ? petState.traits.join(', ') : 'Ninguno'}</strong><br><br>`;
+
+      if (petState.daysAlive <= 2) {
+        farewellText += `<em>"Nuestra aventura fue corta, apenas estábamos conociéndonos, pero te recordaré con cariño..."</em>`;
+      } else if (petState.daysAlive < 5) {
+        farewellText += `<em>"¡Pasamos momentos muy gratos juntos! Crecí bastante y aprendí mucho a tu lado durante estos ${petState.daysAlive} días."</em>`;
+      } else {
+        farewellText += `<em>"¡Qué gran historia construimos! Viví ${petState.daysAlive} días maravillosos contigo, alcanzando el nivel ${petState.level} y superando cada reto de la mano."</em>`;
+      }
+
+      summary.innerHTML = farewellText;
+      input.value = "";
+      modal.classList.remove("hidden");
+      input.focus();
+    }
+
+    document.getElementById("btn-confirm-memorial").onclick = async () => {
+      const newName = document.getElementById("memorial-petname").value.trim();
+      if (!newName) {
+        setGameLog("> ⚠️ Ingresa un nombre válido para la nueva mascota.");
+        return;
+      }
+
+      document.getElementById("memorial-modal").classList.add("hidden");
+      const randomTraits = getRandomInitialTraits();
+      
+      petState = {
+        petName: newName,
+        gender: newMemorialGender,
+        health: 100, hunger: 100, thirst: 100, energy: 100, fun: 100, hygiene: 100, bladder: 0,
+        traits: randomTraits, isDead: false,
+        defaultFoodIndex: 0, defaultDrinkIndex: null, defaultHygieneIndex: null,
+        level: 1, exp: 0, shards: 100,
+        inventory: [{ name: "Manzana fresca", type: "food", value: 25, duration: 2, count: 2 }],
+        lastActionLog: `Nuevo compañero: ${newName}.`,
+        createdAt: Date.now(), daysAlive: 1, lastUpdateTimestamp: Date.now(),
+        fulfilledCount: 0, totalRequests: 0, sleepTimeCount: 0, energyDrinkCount: 0, chocolateCount: 0, sportsCount: 0
+      };
+
+      updateUI();
+      setDialogue(`¡Hola! Soy ${petState.petName}, qué alegría conocerte.`);
+      await syncToCloud();
+    };
+
+    async function handlePetDeath() {
+      petState.isDead = true;
+      petState.health = 0;
+      document.title = defaultBrowserTitle;
+      await syncToCloud();
+      openMemorialModal();
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        currentUsername = user.email.split("@")[0];
+        document.getElementById("user-display").textContent = currentUsername;
+        authScreen.classList.add("hidden");
+        gameDashboard.classList.remove("hidden");
+        await initGameSession(user.uid, currentUsername);
+        startGlobalClock();
+        startLifecycleLoop();
+        startDemandEngine();
+        startAutonomousThoughts();
+      } else {
+        currentUser = null;
+        currentUsername = "";
+        document.title = defaultBrowserTitle;
+        authScreen.classList.remove("hidden");
+        gameDashboard.classList.add("hidden");
+        if (unsubLeaderboard) unsubLeaderboard();
+        if (unsubChat) unsubChat();
+        if (unsubMarket) unsubMarket();
+        if (lifecycleInterval) clearInterval(lifecycleInterval);
+        if (clockInterval) clearInterval(clockInterval);
+        if (demandInterval) clearInterval(demandInterval);
+        if (thoughtsInterval) clearInterval(thoughtsInterval);
+      }
+    });
+
+    async function initGameSession(uid, username) {
+      const petRef = doc(db, "pets", uid);
+      const snap = await getDoc(petRef);
+      let offlineEvents = [];
+
+      if (snap.exists()) {
+        const data = snap.data();
+        petState = {
+          petName: data.petName || "Kuru",
+          gender: data.gender || "Macho",
+          health: data.health ?? 100, hunger: data.hunger ?? 100, thirst: data.thirst ?? 100,
+          energy: data.energy ?? 100, fun: data.fun ?? 100, hygiene: data.hygiene ?? 100, bladder: data.bladder ?? 0,
+          traits: data.traits ?? [], isDead: data.isDead ?? false,
+          defaultFoodIndex: data.defaultFoodIndex ?? null, defaultDrinkIndex: data.defaultDrinkIndex ?? null, defaultHygieneIndex: data.defaultHygieneIndex ?? null,
+          level: data.level ?? 1, exp: data.exp ?? 0, shards: data.shards ?? 150,
+          inventory: data.inventory ?? [],
+          lastActionLog: data.lastActionLog ?? "Sesión iniciada.",
+          createdAt: data.createdAt ?? Date.now(), daysAlive: data.daysAlive ?? 1,
+          lastUpdateTimestamp: data.lastUpdateTimestamp ?? Date.now(),
+          fulfilledCount: data.fulfilledCount ?? 0, totalRequests: data.totalRequests ?? 0,
+          sleepTimeCount: data.sleepTimeCount ?? 0, energyDrinkCount: data.energyDrinkCount ?? 0,
+          chocolateCount: data.chocolateCount ?? 0, sportsCount: data.sportsCount ?? 0
+        };
+
+        if (petState.isDead) {
+          openMemorialModal();
+          return;
+        }
+
+        const now = Date.now();
+        const deltaMinutes = Math.floor((now - petState.lastUpdateTimestamp) / 60000);
+        if (deltaMinutes > 5) {
+          const cycles = Math.floor(deltaMinutes / 1);
+          for (let i = 0; i < cycles; i++) {
+            petState.hunger = Math.max(0, petState.hunger - 1);
+            petState.thirst = Math.max(0, petState.thirst - 1.5);
+            petState.energy = Math.max(0, petState.energy - 0.8);
+            petState.fun = Math.max(0, petState.fun - 1);
+            petState.hygiene = Math.max(0, petState.hygiene - 1);
+
+            if (petState.hunger === 0 && Math.random() < 0.25) {
+              petState.health = Math.max(0, petState.health - 15);
+              offlineEvents.push("Tu mascota pasó hambre durante tu ausencia.");
+            }
+          }
+        }
+      } else {
+        const defaultName = "Kuru";
+        const randomTraits = getRandomInitialTraits();
+        petState = { 
+          petName: defaultName,
+          gender: "Macho",
+          health: 100, hunger: 100, thirst: 100, energy: 100, fun: 100, hygiene: 100, bladder: 0,
+          traits: randomTraits, isDead: false,
+          defaultFoodIndex: 0, defaultDrinkIndex: null, defaultHygieneIndex: null,
+          level: 1, exp: 0, shards: 150, 
+          inventory: [{ name: "Manzana fresca", type: "food", value: 25, duration: 2, count: 2 }],
+          lastActionLog: "Sistema inicializado.",
+          createdAt: Date.now(), daysAlive: 1, lastUpdateTimestamp: Date.now(),
+          fulfilledCount: 0, totalRequests: 0, sleepTimeCount: 0, energyDrinkCount: 0, chocolateCount: 0, sportsCount: 0
+        };
+        await setDoc(petRef, { user: username, ...petState, lastUpdate: serverTimestamp() });
+      }
+
+      updateUI();
+      setDialogue(`¡Hola de nuevo! Qué bueno verte por aquí.`);
+      startSubsystems(username);
+
+      if (offlineEvents.length > 0) {
+        showOfflineReport(offlineEvents);
+      }
+    }
+
+    function showOfflineReport(events) {
+      const modal = document.getElementById("offline-report-modal");
+      const content = document.getElementById("offline-report-content");
+      content.innerHTML = "";
+      events.forEach(ev => {
+        const p = document.createElement("p");
+        p.className = "border-b border-slate-800 pb-2 text-rose-300";
+        p.textContent = `• ${ev}`;
+        content.appendChild(p);
+      });
+      modal.classList.remove("hidden");
+      document.getElementById("close-offline-report").onclick = () => modal.classList.add("hidden");
+    }
+
+    async function syncToCloud() {
+      if (!currentUser) return;
+      petState.lastUpdateTimestamp = Date.now();
+      try {
+        await setDoc(doc(db, "pets", currentUser.uid), {
+          user: currentUsername, ...petState, lastUpdate: serverTimestamp()
+        }, { merge: true });
+      } catch (e) {
+        console.error("Error al sincronizar.");
+      }
+    }
+
+    function evaluateTraitsAndDialogue() {
+      if (petState.totalRequests >= 5 && (petState.fulfilledCount / petState.totalRequests) >= 0.9 && !petState.traits.includes("Malcriado")) {
+        petState.traits.push("Malcriado");
+        setGameLog(`> ⚠️ La mascota ha desarrollado el rasgo: [Malcriado].`);
+      }
+      if (petState.sleepTimeCount >= 6 && !petState.traits.includes("Dormilón")) {
+        petState.traits.push("Dormilón");
+        setGameLog(`> ⚠️ La mascota ha desarrollado el rasgo: [Dormilón].`);
+      }
+      if (petState.energyDrinkCount >= 4 && !petState.traits.includes("Adicto a las bebidas energéticas")) {
+        petState.traits.push("Adicto a las bebidas energéticas");
+        setGameLog(`> ⚠️ La mascota ha desarrollado el rasgo: [Adicto a las bebidas energéticas].`);
+      }
+      if (petState.chocolateCount >= 4 && !petState.traits.includes("Adicto al azúcar")) {
+        petState.traits.push("Adicto al azúcar");
+        setGameLog(`> ⚠️ La mascota ha desarrollado el rasgo: [Adicto al azúcar].`);
+      }
+      if (petState.sportsCount === 0 && petState.daysAlive >= 3 && !petState.traits.includes("Hiperactivo")) {
+        petState.traits.push("Hiperactivo");
+        setGameLog(`> ⚠️ La mascota ha desarrollado el rasgo: [Hiperactivo].`);
+      }
+
+      if (petState.traits.includes("Malcriado")) {
+        setDialogue("¡Quiero caprichos y atención inmediata, no acepto un no por respuesta!");
+        return;
+      }
+      if (petState.traits.includes("Dormilón")) {
+        setDialogue("Tengo mucho sueño... ¿podemos dormir otro ratito más?");
+        return;
+      }
+      if (petState.traits.includes("Adicto al azúcar")) {
+        setDialogue("¡Necesito un chocolate urgente o me darán temblores!");
+        return;
+      }
+      if (petState.traits.includes("Hiperactivo")) {
+        setDialogue("¡Siento demasiada energía acumulada! Necesito correr y gastar físico.");
+        return;
+      }
+
+      if (petState.hunger < 25) {
+        setDialogue("¡Tengo mucha hambre! Mi pancita está vacía.");
+      } else if (petState.thirst < 25) {
+        setDialogue("¡Qué sed tengo! Necesito beber algo fresco.");
+      } else if (petState.energy < 25) {
+        setDialogue("Mis ojos se cierran solos... necesito dormir.");
+      } else if (petState.fun < 30) {
+        setDialogue("Estoy aburrido, ¿jugamos a algo divertido?");
+      } else if (petState.hygiene < 30) {
+        setDialogue("Me siento un poco sucio, un baño me vendría genial.");
+      }
+    }
+
+    function startLifecycleLoop() {
+      if (lifecycleInterval) clearInterval(lifecycleInterval);
+      lifecycleInterval = setInterval(() => {
+        if (!currentUser || petState.isDead) return;
+
+        const elapsedMinutes = Math.floor((Date.now() - petState.createdAt) / 60000);
+        petState.daysAlive = Math.max(1, elapsedMinutes + 1);
+
+        let hungerDrain = 3;
+        let energyDrain = isSleeping ? -10 : 2;
+        let funDrain = 3;
+
+        if (isSleeping) {
+          petState.energy = Math.min(100, petState.energy + 10);
+          petState.health = Math.min(100, petState.health + 1);
+          petState.sleepTimeCount++;
+          updateUI();
+          syncToCloud();
+          return;
+        }
+
+        petState.hunger = Math.max(0, petState.hunger - hungerDrain);
+        petState.thirst = Math.max(0, petState.thirst - 4);
+        petState.energy = Math.max(0, petState.energy - energyDrain);
+        petState.fun = Math.max(0, petState.fun - funDrain);
+        petState.hygiene = Math.max(0, petState.hygiene - 3);
+
+        if (petState.fun < 25 && !petState.traits.includes("Ansioso")) {
+          petState.traits.push("Ansioso");
+          setGameLog(`> ⚠️ La mascota desarrolló el rasgo: [Ansioso].`);
+        }
+        if (petState.energy < 15 && !petState.traits.includes("Insomne")) {
+          petState.traits.push("Insomne");
+          setGameLog(`> ⚠️ La mascota desarrolló el rasgo: [Insomne].`);
+        }
+
+        if (petState.hunger === 0 || petState.thirst === 0) {
+          petState.health = Math.max(0, petState.health - 15);
+        }
+
+        if (petState.health <= 0 && !petState.isDead) {
+          handlePetDeath();
+          return;
+        }
+
+        evaluateTraitsAndDialogue();
+        updateUI();
+        syncToCloud();
+      }, 15000);
+    }
+
+    function startAutonomousThoughts() {
+      if (thoughtsInterval) clearInterval(thoughtsInterval);
+      thoughtsInterval = setInterval(() => {
+        if (!currentUser || activeTaskTimer || isSleeping || activeDemand || petState.isDead) return;
+        const thoughts = [
+          `Me encanta pasar el rato contigo cuidándome.`,
+          `¿Qué actividades haremos hoy?`,
+          `Me siento muy cómodo en nuestro hogar.`,
+          `Gracias por estar siempre pendiente de mí.`
+        ];
+        setDialogue(thoughts[Math.floor(Math.random() * thoughts.length)]);
+      }, 35000);
+    }
+
+    function startDemandEngine() {
+      if (demandInterval) clearInterval(demandInterval);
+      demandInterval = setInterval(() => {
+        if (!currentUser || activeDemand || isSleeping || petState.isDead) return;
+
+        if (Math.random() < 0.4) {
+          const types = ['food', 'drink', 'hygiene', 'sleep', 'bathroom', 'play'];
+          const chosenType = types[Math.floor(Math.random() * types.length)];
+          let text = "";
+
+          if (chosenType === 'food') text = `¡Tengo ganas de comer algo rico!`;
+          else if (chosenType === 'drink') text = `¡Quiero beber algo refrescante!`;
+          else if (chosenType === 'hygiene') text = `¡Necesito un baño y asearme!`;
+          else if (chosenType === 'sleep') text = `Tengo sueño, quiero descansar.`;
+          else if (chosenType === 'bathroom') text = `¡Necesito ir al baño urgente!`;
+          else if (chosenType === 'play') text = `¡Quiero jugar un rato contigo!`;
+
+          activeDemand = { type: chosenType, text };
+          petState.totalRequests++;
+
+          setDialogue(text);
+          document.getElementById("demand-text").textContent = `"${text}"`;
+          document.getElementById("pet-demand-bubble").classList.remove("hidden");
+          
+          document.title = `⚠️ ¡Petición de ${petState.petName}! - Wizzcats Pets`;
+
+          demandTimeLeft = 15;
+          document.getElementById("demand-timer").textContent = `${demandTimeLeft}s`;
+          if (demandCountdownTimer) clearInterval(demandCountdownTimer);
+
+          demandCountdownTimer = setInterval(() => {
+            demandTimeLeft--;
+            document.getElementById("demand-timer").textContent = `${demandTimeLeft}s`;
+            if (demandTimeLeft <= 0) {
+              clearInterval(demandCountdownTimer);
+              failDemand();
+            }
+          }, 1000);
+        }
+      }, 30000);
+    }
+
+    function failDemand() {
+      hideDemandBubble();
+      petState.fun = Math.max(0, petState.fun - 15);
+      if (!petState.traits.includes("Ansioso")) petState.traits.push("Ansioso");
+      setGameLog(`> ⚠️ Ignoraste la petición. Se siente un poco triste.`);
+      setDialogue(`Me ignoraste... me siento triste sin tu atención.`);
+      updateUI();
+      syncToCloud();
+    }
+
+    document.getElementById("btn-fulfill").onclick = () => {
+      if (!activeDemand) return;
+      if (checkSleepBlock()) return;
+      if (demandCountdownTimer) clearInterval(demandCountdownTimer);
+      const type = activeDemand.type;
+      hideDemandBubble();
+
+      petState.fulfilledCount++;
+
+      if (type === 'food') document.getElementById("btn-eat-default").click();
+      else if (type === 'drink') document.getElementById("btn-drink-default").click();
+      else if (type === 'hygiene') document.getElementById("btn-hygiene-default").click();
+      else if (type === 'sleep') document.getElementById("btn-sleep").click();
+      else if (type === 'bathroom') document.getElementById("btn-bathroom").click();
+      else if (type === 'play') document.getElementById("btn-open-play").click();
+      
+      setDialogue(`¡Gracias por atenderme al instante!`);
+    };
+
+    document.getElementById("btn-scold").onclick = () => {
+      if (!activeDemand) return;
+      if (demandCountdownTimer) clearInterval(demandCountdownTimer);
+      hideDemandBubble();
+      petState.fun = Math.max(0, petState.fun - 10);
+      setDialogue(`¡Pero si solo pedía un favor...! 😢`);
+      updateUI();
+      syncToCloud();
+    };
+
+    function hideDemandBubble() {
+      activeDemand = null;
+      if (demandCountdownTimer) clearInterval(demandCountdownTimer);
+      document.getElementById("pet-demand-bubble").classList.add("hidden");
+      document.title = defaultBrowserTitle;
+    }
+
+    window.eatDefault = function() {
+      if (checkSleepBlock()) return;
+      if (petState.defaultFoodIndex === null || !petState.inventory[petState.defaultFoodIndex]) {
+        setGameLog(`> ⚠️ No hay comida predeterminada seleccionada en la mochila.`);
+        setDialogue(`No tengo comida seleccionada como favorita en mi mochila.`);
+        return;
+      }
+      useDefaultInventoryItem(petState.defaultFoodIndex);
+    };
+
+    window.drinkDefault = function() {
+      if (checkSleepBlock()) return;
+      if (petState.defaultDrinkIndex === null || !petState.inventory[petState.defaultDrinkIndex]) {
+        setGameLog(`> ⚠️ No hay bebida predeterminada seleccionada.`);
+        setDialogue(`No tengo bebida seleccionada como favorita en mi mochila.`);
+        return;
+      }
+      useDefaultInventoryItem(petState.defaultDrinkIndex);
+    };
+
+    window.hygieneDefault = function() {
+      if (checkSleepBlock()) return;
+      if (petState.defaultHygieneIndex === null || !petState.inventory[petState.defaultHygieneIndex]) {
+        setGameLog(`> ⚠️ No hay ítem de higiene predeterminado.`);
+        setDialogue(`No tengo un artículo de higiene seleccionado como favorito.`);
+        return;
+      }
+      useDefaultInventoryItem(petState.defaultHygieneIndex);
+    };
+
+    document.getElementById("btn-eat-default").onclick = eatDefault;
+    document.getElementById("btn-drink-default").onclick = drinkDefault;
+    document.getElementById("btn-hygiene-default").onclick = hygieneDefault;
+
+    window.setDefaultSlot = function(index, type) {
+      if (type === 'food') petState.defaultFoodIndex = index;
+      else if (type === 'drink') petState.defaultDrinkIndex = index;
+      else if (type === 'hygiene') petState.defaultHygieneIndex = index;
+      updateUI();
+      syncToCloud();
+      setDialogue(`He seleccionado este artículo como mi favorito para ${type}.`);
+    };
+
+    window.useDefaultInventoryItem = function(index) {
+      const item = petState.inventory[index];
+      if (!item || item.count <= 0) return;
+
+      let actionName = `Consumiendo ${item.name}`;
+      let taskEmoji = "🍽️";
+      if (item.type === 'food') { actionName = `Comiendo ${item.name}`; taskEmoji = "🍽️"; setDialogue(`¡Disfrutando de ${item.name}!`); }
+      else if (item.type === 'drink') { actionName = `Bebiendo ${item.name}`; taskEmoji = "🧃"; setDialogue(`¡Qué refrescante ${item.name}!`); }
+      else if (item.type === 'hygiene') { actionName = `Usando ${item.name}`; taskEmoji = "🧼"; setDialogue(`¡Limpiando con ${item.name}!`); }
+
+      if (item.isEnergyDrink) petState.energyDrinkCount++;
+      if (item.isChocolate) petState.chocolateCount++;
+
+      performProgressiveTask(actionName, item.duration || 2, taskEmoji, null, () => {
+        if (item.type === 'food') {
+          petState.hunger = Math.min(100, petState.hunger + item.value);
+          petState.bladder = Math.min(100, petState.bladder + 15);
+        } else if (item.type === 'drink') {
+          petState.thirst = Math.min(100, petState.thirst + item.value);
+          if (item.isEnergyDrink) petState.energy = Math.min(100, petState.energy + 15);
+        } else if (item.type === 'hygiene') {
+          petState.hygiene = Math.min(100, petState.hygiene + item.value);
+        }
+
+        item.count--;
+        if (item.count <= 0) {
+          petState.inventory.splice(index, 1);
+          adjustIndicesAfterRemoval(index);
+        }
+        updateUI();
+        syncToCloud();
+      });
+    };
+
+    function adjustIndicesAfterRemoval(removedIndex) {
+      if (petState.defaultFoodIndex === removedIndex) petState.defaultFoodIndex = null;
+      else if (petState.defaultFoodIndex > removedIndex) petState.defaultFoodIndex--;
+
+      if (petState.defaultDrinkIndex === removedIndex) petState.defaultDrinkIndex = null;
+      else if (petState.defaultDrinkIndex > removedIndex) petState.defaultDrinkIndex--;
+
+      if (petState.defaultHygieneIndex === removedIndex) petState.defaultHygieneIndex = null;
+      else if (petState.defaultHygieneIndex > removedIndex) petState.defaultHygieneIndex--;
+    }
+
+    window.dropInventoryItem = function(index) {
+      const item = petState.inventory[index];
+      item.count--;
+      if (item.count <= 0) {
+        petState.inventory.splice(index, 1);
+        adjustIndicesAfterRemoval(index);
+      }
+      updateUI();
+      syncToCloud();
+      setDialogue(`He descartado una unidad de la mochila.`);
+    };
+
+    document.getElementById("btn-sleep").addEventListener("click", () => {
+      if (isSleeping) return;
+      isSleeping = true;
+      setPetAvatarEmoji("🛌");
+      document.getElementById("btn-sleep").classList.add("hidden");
+      document.getElementById("btn-wake").classList.remove("hidden");
+      setDialogue(`Zzz... Me voy a dormir un rato.`);
+      toggleActionButtons(true);
+      document.getElementById("btn-wake").disabled = false;
+    });
+
+    document.getElementById("btn-wake").addEventListener("click", () => {
+      if (!isSleeping) return;
+      isSleeping = false;
+      document.getElementById("btn-wake").classList.add("hidden");
+      document.getElementById("btn-sleep").classList.remove("hidden");
+      toggleActionButtons(false);
+      updateBaseAvatar();
+      setDialogue(`¡Buenos días! Ya desperté con mucha energía.`);
+      updateUI();
+      syncToCloud();
+    });
+
+    document.getElementById("btn-bathroom").addEventListener("click", () => {
+      if (checkSleepBlock()) return;
+      if (petState.bladder <= 5) {
+        setDialogue(`No necesito ir al baño todavía.`);
+        return;
+      }
+      performProgressiveTask("Usando el baño", 2, "🚽", null, () => {
+        petState.bladder = 0;
+        setDialogue(`¡Listo! Ya me siento más liviano.`);
+      });
+    });
+
+    document.getElementById("btn-open-play").onclick = () => { 
+      if (!checkSleepBlock()) {
+        renderModalsContent();
+        document.getElementById("play-modal").classList.remove("hidden");
+      }
+    };
+    document.getElementById("close-play-btn").onclick = () => document.getElementById("play-modal").classList.add("hidden");
+
+    document.getElementById("btn-open-outdoor").onclick = () => { 
+      if (!checkSleepBlock()) {
+        renderModalsContent();
+        document.getElementById("outdoor-modal").classList.remove("hidden");
+      }
+    };
+    document.getElementById("close-outdoor-btn").onclick = () => document.getElementById("outdoor-modal").classList.add("hidden");
+
+    document.getElementById("btn-open-minigames").onclick = () => { 
+      if (!checkSleepBlock()) {
+        renderModalsContent();
+        document.getElementById("minigames-modal").classList.remove("hidden");
+      }
+    };
+    document.getElementById("close-minigames-btn").onclick = () => document.getElementById("minigames-modal").classList.add("hidden");
+
+    window.startPlayActivity = function(activityName, duration, funGain, emoji) {
+      document.getElementById("play-modal").classList.add("hidden");
+      setDialogue(`¡Qué divertido! Vamos a ${activityName.toLowerCase()}.`);
+      performProgressiveTask(activityName, duration, emoji, null, () => {
+        petState.fun = Math.min(100, petState.fun + funGain);
+        petState.exp += 20;
+        if (petState.traits.includes("Miedoso")) {
+          petState.traits = petState.traits.filter(t => t !== "Miedoso");
+          setDialogue(`¡Jugar juntos me dio mucha confianza! Ya no tengo miedo.`);
+        }
+        checkLevelUp();
+      });
+    };
+
+    window.startOutdoorActivity = function(activityName, duration, funGain, emoji) {
+      document.getElementById("outdoor-modal").classList.add("hidden");
+      petState.sportsCount++;
+      setDialogue(`Iniciando actividad física: ${activityName}...`);
+      performProgressiveTask(activityName, duration, emoji, null, () => {
+        petState.fun = Math.min(100, petState.fun + funGain);
+        petState.energy = Math.max(0, petState.energy - 10);
+        if (petState.traits.includes("Hiperactivo")) {
+          petState.traits = petState.traits.filter(t => t !== "Hiperactivo");
+          setDialogue(`¡Hacer deporte canalizó toda mi energía acumulada!`);
+        }
+        checkLevelUp();
+      });
+    };
+
+    window.startWorkActivity = function(workName, duration, coinReward, energyCost, emoji) {
+      document.getElementById("minigames-modal").classList.add("hidden");
+      if (petState.energy < energyCost) {
+        setDialogue(`Tengo poca energía para trabajar ahora mismo, necesito descansar.`);
+        return;
+      }
+      setDialogue(`Trabajando en ${workName}...`);
+      performProgressiveTask(workName, duration, emoji, (p) => {
+        petState.energy = Math.max(0, petState.energy - (energyCost * p));
+      }, () => {
+        petState.shards += coinReward;
+        petState.exp += 30;
+        checkLevelUp();
+        setDialogue(`¡Trabajo completado! Ganamos +${coinReward} monedas.`);
+      });
+    };
+
+    function checkLevelUp() {
+      const required = petState.level * 60;
+      if (petState.exp >= required) {
+        petState.exp -= required;
+        petState.level++;
+        setDialogue(`¡Increíble! He crecido al Nivel ${petState.level}.`);
+        updateBaseAvatar();
+      }
+    }
+
+    window.buyPharmaItem = function(itemName, traitToCure, cost) {
+      if (petState.shards < cost) { setDialogue(`No tienes suficientes monedas.`); return; }
+      petState.shards -= cost;
+      if (petState.traits.includes(traitToCure)) {
+        petState.traits = petState.traits.filter(t => t !== traitToCure);
+        setDialogue(`¡${itemName} funcionó! Me siento mucho más tranquilo.`);
+      } else {
+        setDialogue(`Has adquirido ${itemName}.`);
+      }
+      updateUI();
+      syncToCloud();
+      document.getElementById("shop-modal").classList.add("hidden");
+    };
+
+    function updateUI() {
+      document.getElementById("header-pet-name").textContent = petState.petName.toUpperCase();
+      const genderSymbol = petState.gender === "Hembra" ? "♀" : "♂";
+      const genderEl = document.getElementById("header-pet-gender");
+      genderEl.textContent = genderSymbol;
+      genderEl.className = petState.gender === "Hembra" ? "text-rose-400 font-bold" : "text-blue-300 font-bold";
+
+      document.getElementById("health-val").textContent = `${Math.round(petState.health)}%`;
+      document.getElementById("health-bar").style.width = `${petState.health}%`;
+      document.getElementById("hunger-val").textContent = `${Math.round(petState.hunger)}%`;
+      document.getElementById("hunger-bar").style.width = `${petState.hunger}%`;
+      document.getElementById("thirst-val").textContent = `${Math.round(petState.thirst)}%`;
+      document.getElementById("thirst-bar").style.width = `${petState.thirst}%`;
+      document.getElementById("energy-val").textContent = `${Math.round(petState.energy)}%`;
+      document.getElementById("energy-bar").style.width = `${petState.energy}%`;
+      document.getElementById("bladder-val").textContent = `${Math.round(petState.bladder)}%`;
+      document.getElementById("bladder-bar").style.width = `${petState.bladder}%`;
+      document.getElementById("fun-val").textContent = `${Math.round(petState.fun)}%`;
+      document.getElementById("fun-bar").style.width = `${petState.fun}%`;
+      document.getElementById("hygiene-val").textContent = `${Math.round(petState.hygiene)}%`;
+      document.getElementById("hygiene-bar").style.width = `${petState.hygiene}%`;
+
+      document.getElementById("user-shards").textContent = petState.shards;
+
+      const traitsContainer = document.getElementById("traits-container");
+      traitsContainer.innerHTML = "";
+      if (!petState.traits || petState.traits.length === 0) {
+        traitsContainer.innerHTML = `<span class="text-[11px] text-slate-500 italic">Ningún rasgo desarrollado aún.</span>`;
+      } else {
+        petState.traits.forEach(trait => {
+          const desc = traitDescriptions[trait] || "Rasgo de personalidad.";
+          const badge = document.createElement("div");
+          badge.className = "relative has-tooltip bg-blue-950/80 border border-blue-800 text-blue-300 text-[11px] px-2.5 py-1 rounded-xl cursor-pointer font-bold";
+          badge.innerHTML = `
+            ${trait}
+            <div class="tooltip-text invisible opacity-0 transition-opacity absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 bg-slate-900 border border-blue-500 text-slate-200 text-[10px] p-2.5 rounded-2xl shadow-2xl z-50 pointer-events-none text-center font-normal">
+              ${desc}
+            </div>
+          `;
+          traitsContainer.appendChild(badge);
+        });
+      }
+
+      document.getElementById("slot-food").textContent = petState.defaultFoodIndex !== null && petState.inventory[petState.defaultFoodIndex] ? petState.inventory[petState.defaultFoodIndex].name : "Ninguno";
+      document.getElementById("slot-drink").textContent = petState.defaultDrinkIndex !== null && petState.inventory[petState.defaultDrinkIndex] ? petState.inventory[petState.defaultDrinkIndex].name : "Ninguno";
+      document.getElementById("slot-hygiene").textContent = petState.defaultHygieneIndex !== null && petState.inventory[petState.defaultHygieneIndex] ? petState.inventory[petState.defaultHygieneIndex].name : "Ninguno";
+
+      let faseNombre = "Huevo (Incubación)";
+      if (petState.level >= 5) faseNombre = "Dragón";
+      else if (petState.level >= 3) faseNombre = "Criatura Avanzada";
+      else if (petState.level >= 2) faseNombre = "Cachorro";
+
+      document.getElementById("pet-level").textContent = `NV. ${petState.level} (${faseNombre})`;
+      if (!activeTaskTimer && !isSleeping) updateBaseAvatar();
+
+      const invContainer = document.getElementById("inventory-container");
+      invContainer.innerHTML = "";
+      if (!petState.inventory || petState.inventory.length === 0) {
+        invContainer.innerHTML = `<div class="text-slate-500 text-center py-2 font-sans">Mochila vacía.</div>`;
+        return;
+      }
+
+      petState.inventory.forEach((item, index) => {
+        let itemEmoji = "📦";
+        if (item.type === 'food') itemEmoji = "🍽️";
+        else if (item.type === 'drink') itemEmoji = "🧃";
+        else if (item.type === 'hygiene') itemEmoji = "🧼";
+
+        const div = document.createElement("div");
+        div.className = "flex justify-between items-center bg-slate-950 p-2.5 rounded-2xl border border-slate-800 gap-2";
+        div.innerHTML = `
+          <div class="truncate">
+            <div class="font-bold text-blue-200 truncate">${itemEmoji} ${item.name} <span class="text-xs text-amber-400 font-normal">x${item.count}</span></div>
+            <div class="text-[10px] text-slate-400 uppercase">${item.type} // Valor: +${item.value}</div>
+          </div>
+          <div class="flex gap-1.5 shrink-0">
+            ${item.type === 'food' ? `<button onclick="setDefaultSlot(${index}, 'food')" class="px-2 py-1 bg-slate-900 border border-blue-700 text-blue-300 rounded-xl text-[10px] font-bold cursor-pointer">FAV</button>` : ''}
+            ${item.type === 'drink' ? `<button onclick="setDefaultSlot(${index}, 'drink')" class="px-2 py-1 bg-slate-900 border border-cyan-700 text-cyan-300 rounded-xl text-[10px] font-bold cursor-pointer">FAV</button>` : ''}
+            ${item.type === 'hygiene' ? `<button onclick="setDefaultSlot(${index}, 'hygiene')" class="px-2 py-1 bg-slate-900 border border-purple-700 text-purple-300 rounded-xl text-[10px] font-bold cursor-pointer">FAV</button>` : ''}
+            <button onclick="dropInventoryItem(${index})" class="px-2 py-1 bg-rose-950/60 border border-rose-800 text-rose-300 rounded-xl text-[10px] cursor-pointer">✕</button>
+          </div>
+        `;
+        invContainer.appendChild(div);
+      });
+    }
+
+    window.switchLeaderboard = function(metric) {
+      currentLeaderboardMetric = metric;
+      ['days', 'level'].forEach(m => {
+        const btn = document.getElementById(`tab-${m}`);
+        if (m === metric) {
+          btn.className = "bg-blue-600 text-white py-2 rounded-xl cursor-pointer transition";
+        } else {
+          btn.className = "bg-slate-950 text-slate-400 py-2 rounded-xl cursor-pointer transition";
+        }
+      });
+      if (currentUser) startSubsystems(currentUsername);
+    }
+
+    window.switchShopTab = function(tab) {
+      ['food', 'drink', 'hygiene', 'pharma'].forEach(t => {
+        const btn = document.getElementById(`shop-tab-${t}`);
+        const sec = document.getElementById(`shop-section-${t}`);
+        if (t === tab) {
+          btn.className = "bg-indigo-600 text-white py-2 rounded-xl cursor-pointer transition";
+          sec.classList.remove("hidden");
+        } else {
+          btn.className = "bg-slate-950 text-slate-400 py-2 rounded-xl cursor-pointer transition";
+          sec.classList.add("hidden");
+        }
+      });
+    }
+
+    document.getElementById("btn-open-shop").onclick = () => { if (!checkSleepBlock()) document.getElementById("shop-modal").classList.remove("hidden"); };
+    document.getElementById("close-shop-btn").onclick = () => document.getElementById("shop-modal").classList.add("hidden");
+
+    window.buyShopItem = function(itemObj, cost) {
+      if (petState.shards < cost) { setDialogue(`No tienes suficientes monedas.`); return; }
+      petState.shards -= cost; 
+
+      const existing = petState.inventory.find(i => i.name === itemObj.name);
+      if (existing) {
+        existing.count = (existing.count || 1) + 1;
+      } else {
+        itemObj.count = 1;
+        petState.inventory.push(itemObj);
+      }
+
+      updateUI(); syncToCloud();
+      setDialogue(`¡Has comprado ${itemObj.name}!`);
+      document.getElementById("shop-modal").classList.add("hidden");
+    };
+
+    function startSubsystems(username) {
+      const orderField = currentLeaderboardMetric === 'days' ? "daysAlive" : "level";
+
+      const qLeaderboard = query(collection(db, "pets"), orderBy(orderField, "desc"), limit(10));
+      unsubLeaderboard = onSnapshot(qLeaderboard, (snapshot) => {
+        const container = document.getElementById("leaderboard-container");
+        container.innerHTML = "";
+        if (snapshot.empty) { container.innerHTML = `<div class="text-center text-slate-500 py-2 font-sans">Sin registros.</div>`; return; }
+        let rank = 1;
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const isMe = data.user === username;
+          const deadTag = data.isDead ? " (Inactivo)" : "";
+          const genderSym = data.gender === "Hembra" ? "♀" : "♂";
+          const row = document.createElement("div");
+          row.className = `flex justify-between items-center p-2.5 rounded-2xl border ${isMe ? 'bg-blue-950/40 border-blue-800 text-blue-200' : 'bg-slate-950 border-slate-800 text-slate-300'}`;
+          
+          let statVal = `${data.daysAlive || 1} Días`;
+          if (currentLeaderboardMetric === 'level') statVal = `Nv. ${data.level || 1}`;
+
+          row.innerHTML = `<span>#${rank} ${data.petName || 'Mascota'} ${genderSym} (de ${data.user})${deadTag}</span> <span class="bg-blue-900/40 px-2 py-0.5 rounded-lg text-blue-300">${statVal}</span>`;
+          container.appendChild(row);
+          rank++;
+        });
+      });
+
+      let unreadChats = 0, isChatOpen = false;
+      const chatDrawer = document.getElementById("chat-drawer");
+      document.getElementById("toggle-chat-btn").onclick = () => {
+        isChatOpen = !isChatOpen;
+        chatDrawer.classList.toggle("translate-x-full", !isChatOpen);
+        if (isChatOpen) { unreadChats = 0; updateChatBadge(); }
+      };
+      document.getElementById("close-chat-btn").onclick = () => { isChatOpen = false; chatDrawer.classList.add("translate-x-full"); };
+
+      const sendMsg = async () => {
+        const input = document.getElementById("chat-input");
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = "";
+        await addDoc(collection(db, "global_chat"), { user: username, text: text, timestamp: serverTimestamp() });
+      };
+      document.getElementById("send-chat-btn").onclick = sendMsg;
+      document.getElementById("chat-input").onkeypress = (e) => { if (e.key === "Enter") sendMsg(); };
+
+      unsubChat = onSnapshot(query(collection(db, "global_chat"), orderBy("timestamp", "asc"), limit(30)), (snapshot) => {
+        const container = document.getElementById("chat-messages-container");
+        container.innerHTML = "";
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const isMe = data.user === username;
+          const bubble = document.createElement("div");
+          bubble.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1`;
+          bubble.innerHTML = `<span class="text-[10px] text-slate-500">${data.user}</span><div class="p-2.5 rounded-2xl max-w-[85%] text-xs ${isMe ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-200'}">${data.text}</div>`;
+          container.appendChild(bubble);
+        });
+        container.scrollTop = container.scrollHeight;
+        if (!isChatOpen && snapshot.docChanges().some(c => c.type === "added")) {
+          unreadChats++;
+          updateChatBadge();
+        }
+      });
+
+      function updateChatBadge() {
+        const badge = document.getElementById("chat-badge");
+        if (unreadChats > 0) { badge.textContent = unreadChats; badge.classList.remove("hidden"); }
+        else { badge.classList.add("hidden"); }
+      }
+
+      document.getElementById("btn-open-market").onclick = () => { if (!checkSleepBlock()) document.getElementById("market-modal").classList.remove("hidden"); };
+      document.getElementById("close-market-btn").onclick = () => document.getElementById("market-modal").classList.add("hidden");
+
+      document.getElementById("btn-create-listing").onclick = async () => {
+        const name = document.getElementById("market-item-name").value.trim();
+        const price = parseInt(document.getElementById("market-item-price").value);
+        if (!name || isNaN(price) || price <= 0) return;
+        await addDoc(collection(db, "market_listings"), { sellerId: currentUser.uid, sellerName: username, itemName: name, price: price, createdAt: serverTimestamp() });
+        document.getElementById("market-item-name").value = "";
+        document.getElementById("market-item-price").value = "";
+        setDialogue(`Has publicado ${name} en el mercado.`);
+      };
+
+      unsubMarket = onSnapshot(query(collection(db, "market_listings"), orderBy("createdAt", "desc"), limit(10)), (snapshot) => {
+        const container = document.getElementById("market-listings-container");
+        container.innerHTML = "";
+        if (snapshot.empty) { container.innerHTML = `<div class="text-center text-slate-500 py-6 font-sans">No hay ofertas en el mercado.</div>`; return; }
+        snapshot.forEach((docSnap) => {
+          const item = docSnap.data();
+          const id = docSnap.id;
+          const isMine = item.sellerId === currentUser.uid;
+          const row = document.createElement("div");
+          row.className = "flex justify-between items-center p-3 rounded-2xl bg-slate-950 border border-slate-800";
+          row.innerHTML = `<div><div class="font-bold text-blue-200">${item.itemName}</div><div class="text-[10px] text-slate-400">Vendedor: ${item.sellerName}</div></div><div class="flex items-center gap-3"><span class="text-amber-400 font-bold">${item.price} 🪙</span>${isMine ? `<button data-id="${id}" class="btn-cancel px-3 py-1.5 bg-rose-950/60 border border-rose-800 text-rose-300 rounded-xl text-[10px] cursor-pointer">RETIRAR</button>` : `<button data-id="${id}" data-price="${item.price}" data-item="${item.itemName}" class="btn-buy px-3 py-1.5 bg-blue-600 text-white font-bold rounded-xl text-[10px] cursor-pointer">COMPRAR</button>`}</div>`;
+          container.appendChild(row);
+        });
+
+        document.querySelectorAll(".btn-cancel").forEach(b => b.onclick = async (e) => await deleteDoc(doc(db, "market_listings", e.target.getAttribute("data-id"))));
+        document.querySelectorAll(".btn-buy").forEach(b => b.onclick = async (e) => {
+          const id = e.target.getAttribute("data-id");
+          const price = parseInt(e.target.getAttribute("data-price"));
+          const itemName = e.target.getAttribute("data-item");
+
+          if (petState.shards < price) { setDialogue(`No tienes suficientes monedas para comprar esto.`); return; }
+          petState.shards -= price; 
+
+          const existing = petState.inventory.find(i => i.name === itemName);
+          if (existing) {
+            existing.count = (existing.count || 1) + 1;
+          } else {
+            petState.inventory.push({ name: itemName, type: 'food', value: 40, duration: 3, count: 1 });
+          }
+
+          updateUI(); syncToCloud();
+          await deleteDoc(doc(db, "market_listings", id));
+          setDialogue(`¡Compraste ${itemName} en el mercado comunitario!`);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
